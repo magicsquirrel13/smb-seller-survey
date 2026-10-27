@@ -40,6 +40,14 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
 .langtog button.on{background:var(--teal);color:#fff;box-shadow:0 2px 8px -2px var(--teal)}
 .who{font-weight:600;color:var(--ink)}
 .linkbtn{appearance:none;border:0;background:none;color:var(--teal);font:600 12.5px var(--f-body);cursor:pointer;padding:0}
+.whochip{display:inline-flex;align-items:center;gap:9px;border:2px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:6px 10px 6px 12px;cursor:pointer;color:var(--ink);font:inherit;transition:.12s}
+.whochip:hover,.whochip:focus-visible{border-color:var(--teal);background:var(--teal-soft)}
+.whochip .av{font-size:16px;line-height:1}
+.whochip .wtxt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.08;text-align:left}
+.whochip .wtxt b{font-weight:700;font-size:13px}
+.whochip .wtxt small{font-size:9.5px;color:var(--teal);font-weight:700;letter-spacing:.01em}
+.whochip .swico{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--bad)} .dot.on{background:var(--good)}
 .qbadge{font-family:var(--f-mono);font-size:11px;background:var(--marigold-soft);color:#7a5407;padding:2px 8px;border-radius:999px}
 .net{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px}
@@ -221,10 +229,12 @@ textarea.field{min-height:120px;resize:vertical}
       <button type="button" data-l="hi">Hinglish</button>
     </div>
     <div class="right" id="chrome" hidden>
-      <span class="who">👤 <span id="whoName">—</span></span>
-      <button class="linkbtn" id="switchWho">switch</button>
+      <button class="whochip" id="switchWho" title="Switch to a different surveyor">
+        <span class="av">👤</span>
+        <span class="wtxt"><b id="whoName">—</b><small>Tap to switch person</small></span>
+        <svg class="swico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l-3 3 3 3"/><path d="M4 13h9"/><path d="M17 14l3-3-3-3"/><path d="M20 11h-9"/></svg>
+      </button>
       <span class="qbadge" id="queueBadge" hidden>0</span>
-      <span class="net"><span class="dot" id="netDot"></span><span id="netTxt">offline</span></span>
     </div>
   </div>
 
