@@ -40,6 +40,9 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
 .topbar .brand{font-family:var(--f-display);font-weight:800;font-size:16px}
 .topbar .brand small{display:block;font-family:var(--f-body);font-weight:600;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--teal)}
 .topbar .right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.langtog{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.langtog button{appearance:none;border:0;background:none;font:700 12px var(--f-body);padding:5px 13px;cursor:pointer;color:var(--muted);transition:.12s}
+.langtog button.on{background:var(--teal);color:#fff}
 .who{font-weight:600;color:var(--ink)}
 .linkbtn{appearance:none;border:0;background:none;color:var(--teal);font:600 12.5px var(--f-body);cursor:pointer;padding:0}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--bad)} .dot.on{background:var(--good)}
@@ -218,6 +221,10 @@ textarea.field{min-height:120px;resize:vertical}
 <div class="app">
   <div class="topbar">
     <div class="brand">Metro Seller Survey<small>SingleInterface · SMB research</small></div>
+    <div class="langtog" id="langTog" role="group" aria-label="Survey language" title="Language the questions show in">
+      <button type="button" data-l="en">EN</button>
+      <button type="button" data-l="hi">Hinglish</button>
+    </div>
     <div class="right" id="chrome" hidden>
       <span class="who">👤 <span id="whoName">—</span></span>
       <button class="linkbtn" id="switchWho">switch</button>
@@ -360,6 +367,71 @@ const SECTIONS = [
 const QS = SECTIONS.flatMap(s=>s.qs);
 // questions can declare grouped options (q.groups); flatten them into q.opts so results/CSV/nav stay unchanged
 QS.forEach(q=>{ if(q.groups && !q.opts) q.opts = q.groups.flatMap(g=>g.opts); });
+
+/* ======== Hinglish layer — surveyor can read/ask each question in Hinglish ========
+   Only the DISPLAYED text changes; every answer's stored value stays the English option. */
+let uiLang = (localStorage.getItem('si_uilang')==='hi') ? 'hi' : 'en';
+const HI = {
+  _sec:{
+    A:{t:"Aapke baare mein", b:"Thodi si baatein aapke baare mein."},
+    B:{t:"Aapka business", b:"Apni shop ya clinic ke baare mein batayein."},
+    C:{t:"Aaj customers kaise aate hain", b:"Abhi business kahan se aata hai."},
+    D:{t:"Aapki digital marketing", b:"Agency, ads, aur kharcha."},
+    E:{t:"Naye customers laana", b:"Naye customers aane ke baare mein aap kya dekhte hain."},
+    F:{t:"Online aap kaise dikhte hain", b:"Jo aap phone par khol sakte hain — page, post aur reviews."},
+    G:{t:"Sab khud sambhaalna", b:"Time, log aur sab kuch sambhaalna."},
+    H:{t:"Unke hisaab se kya theek karega", b:"Unki apni raai — koi pitch nahi."}
+  },
+  _groups:{"Organic — free / unpaid":"Organic — free / bina paise","Ads — paid":"Ads — paid"},
+  role:{q:"Business mein aapka role kya hai?", o:{"Owner":"Maalik","Family member who runs it":"Family member jo chalata hai","Manager (employee)":"Manager (employee)"}},
+  generation:{q:"Yeh business aapne shuru kiya ya family se mila hai?", o:{"First generation — I/we started it":"First generation — maine/humne shuru kiya","Second generation — from my parents":"Second generation — mummy-papa se mila","Third generation or older":"Teesri peedhi ya usse purana","I bought it / took it over / franchise":"Maine khareeda / sambhaala / franchise liya"}},
+  age:{q:"Aapki umar", o:{"Under 25":"25 se kam"}},
+  gender:{q:"Gender", s1:"Respondent ka gender", o:{"Prefer not to say":"Nahi batana"}},
+  edu:{q:"Sabse zyada padhai (education)"},
+  lang:{q:"Business ke liye phone par kaunsi bhasha pasand hai?", s1:"Baat-cheet ki bhasha", o:{"Regional language":"Regional bhasha"}},
+  type:{q:"Yeh kis tarah ka business hai?", s1:"Business type", o:{"Retail shop":"Retail shop / dukaan","Home services / repairs":"Home services / repair"}},
+  locations:{q:"Aapke kitne outlet ya branch hain?"},
+  years:{q:"Business kitna purana hai?", o:{"Less than 2 years":"2 saal se kam","2–5 years":"2–5 saal","5–10 years":"5–10 saal","More than 10 years":"10 saal se zyada"}},
+  team:{q:"Aapke saath kitne log kaam karte hain?", o:{"Just me":"Sirf main","More than 20":"20 se zyada"}},
+  sales:{q:"Mahine ki rough sales (saare outlet)", o:{"Prefer not to say":"Nahi batana"}},
+  sources:{q:"Zyadatar naye customers kahan se aate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"Walk-ins / passing by":"Walk-in / saamne se guzarte hue","Word of mouth / referrals":"Mooh-zubaani / referral","Pamphlets / newspaper / hoardings":"Pamphlet / newspaper / hoarding"}},
+  presence:{q:"Inmein se aapke business ke paas kya kya hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"A page on Google / Google Maps":"Google / Google Maps par page","A website":"Website","None of these":"Inmein se koi nahi"}},
+  who:{q:"Aapki digital marketing kaun chalaata hai?", o:{"A local agency":"Local agency","A freelancer":"Freelancer","My own staff":"Mera apna staff","I do it myself":"Main khud karta hoon","A family member":"Family member","Nobody right now":"Abhi koi nahi"}},
+  platforms:{q:"Aap ads kahan chalate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"I don't run ads":"Main ads nahi chalaata"}},
+  fee:{q:"Agency / freelancer ko mahine ka kitna dete hain? (sirf fee, ad ka paisa nahi)", o:{"Nothing / don't use one":"Kuch nahi / koi nahi hai"}},
+  adspend_google:{q:"Google Ads par mahine ka kitna kharch karte hain? (Google ko diya paisa)"},
+  adspend_meta:{q:"Facebook ads par mahine ka kitna kharch karte hain? (Meta ko diya paisa)"},
+  tenure:{q:"Apni current agency ke saath kitne time se hain?", o:{"Less than 6 months":"6 mahine se kam","6–12 months":"6–12 mahine","1–2 years":"1–2 saal","More than 2 years":"2 saal se zyada","Don't have one":"Koi nahi hai"}},
+  switched:{q:"Pichhle 2 saal mein kitni agency badli?", o:{"None":"Koi nahi","3 or more":"3 ya zyada"}},
+  sat:{q:"Apni agency / current setup se kitne khush hain?", o:{"Very unhappy":"Bahut naraaz","Unhappy":"Naraaz","Okay":"Theek-thaak","Happy":"Khush","Very happy":"Bahut khush"}},
+  customer_trend:{q:"Ek saal pehle ke mukaable, naye customers badh rahe hain ya ghat rahe hain?", o:{"Growing steadily":"Dheere-dheere badh rahe","About the same":"Lagbhag same","Slowly dropping":"Dheere-dheere ghat rahe","Dropping fast":"Tezi se ghat rahe","Hard to say":"Keh nahi sakte"}},
+  found_online:{q:"Abhi Google par apna business search karein — kya dikhta hai?", hint:"Unse abhi phone par karwayein", o:{"I show up on top":"Sabse upar aata hoon","I show up, but lower down":"Aata hoon, par neeche","Wrong or old information shows":"Galat ya purani jaankari dikhti hai","I don't show up at all":"Bilkul nahi aata","I've never checked":"Kabhi check nahi kiya"}},
+  competitor_check:{q:"Ab wo search karein jo customer likhega aap jaisi shop dhoondhne ke liye. Aapse upar kaun aata hai?", o:{"I'm at the top":"Main sabse upar","A competitor is above me":"Ek competitor upar hai","Only competitors — I'm not there":"Sirf competitors — main nahi hoon","Just directories / ads, no real shops":"Sirf directory / ads, koi asli shop nahi","Didn't check":"Check nahi kiya"}},
+  enquiry_slip:{q:"Jo call aur message aap time par nahi dekh paate, unka kya hota hai?", o:{"We get back to all of them":"Sabko wapas reply karte hain","We get back to most":"Zyadatar ko","Many just slip through":"Kaafi chhoot jaate hain","We lose them":"Haath se nikal jaate hain","Not sure":"Pata nahi"}},
+  enquiry_volume:{q:"Average din mein kitni customer enquiry aati hain — call aur message milaakar?", o:{"Under 5":"5 se kam","More than 50":"50 se zyada"}},
+  missed_calls:{q:"Busy din mein kitni customer call miss ho jaati hain?", o:{"None":"Koi nahi","More than 15":"15 se zyada","Don't know":"Pata nahi"}},
+  presence_problems:{q:"Online aapka business kaisa dikhta hai, usme kya pareshaan karta hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"My page looks empty or outdated":"Mera page khaali ya purana lagta hai","No recent photos or posts":"Koi nayi photo ya post nahi","Bad reviews, or very few":"Bure reviews, ya bahut kam","I don't know what to post":"Pata nahi kya post karoon","No time to keep it updated":"Update rakhne ka time nahi","Competitors look better than me":"Competitor mujhse acche dikhte hain","I don't have a proper page":"Mera proper page hi nahi hai"}},
+  reviews_feeling:{q:"Apne Google reviews aur rating ke baare mein kaisa lagta hai?", o:{"Happy with them":"Khush hoon","They're okay":"Theek hain","Worried about them":"Chinta hoti hai","I don't get many":"Zyada aate hi nahi","I never look":"Kabhi dekhta hi nahi"}},
+  post_frequency:{q:"Kitni baar kuch naya daalte hain — post, photo ya offer?", o:{"Several times a week":"Hafte mein kai baar","About once a week":"Hafte mein ek baar","Once in a while":"Kabhi-kabhi","Rarely or never":"Bahut kam ya kabhi nahi"}},
+  creatives:{q:"Aapki photo, post aur offer kaun banata hai?", o:{"I make them on my phone":"Main phone par banata hoon","A staff member does":"Staff banata hai","A designer / agency":"Designer / agency","We rarely make any":"Bahut kam banate hain","We don't post at all":"Hum post hi nahi karte"}},
+  creative_blocker:{q:"Achhi photo aur post regular daalne mein sabse zyada kya rukaavat hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"No time to make them":"Banane ka time nahi","Don't know what to post":"Pata nahi kya post karein","No one to design / edit":"Design / edit karne wala koi nahi","They look unprofessional":"Professional nahi lagte","Run out of ideas":"Ideas khatam ho jaate hain","Too costly to outsource":"Bahar se karwana mehenga","Nothing — we manage fine":"Kuch nahi — hum theek karte hain"}},
+  search_terms:{q:"Aapko pata hai customer Google par kya exact shabd likhte hain aap jaisa business dhoondhne ke liye?", o:{"Yes — clearly":"Haan — saaf pata hai","Some idea":"Thoda andaza","No — I don't know":"Nahi — pata nahi"}},
+  running_problems:{q:"Yeh sab roz chalaane mein kya mushkil hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"No time for it":"Iske liye time nahi","I'm doing everything myself":"Main sab khud karta hoon","No staff with the right skills":"Sahi skill wala staff nahi","Can't afford to hire help":"Help rakhne ki gunjaish nahi","I don't know how to do it":"Mujhe karna nahi aata","Money spent but no clear result":"Paisa lagta hai par result nahi dikhta","Too many apps and tools to manage":"Bahut saare apps aur tools sambhaalne padte hain"}},
+  owner_time:{q:"Roz customers aur online cheezon mein aapka kitna time jaata hai?", o:{"Almost none":"Lagbhag kuch nahi","Under 1 hour":"1 ghante se kam","1–2 hours":"1–2 ghante","More than 2 hours":"2 ghante se zyada"}},
+  who_does_digital:{q:"Online presence aur customers ko reply asal mein kaun sambhaalta hai?", o:{"I do it all myself":"Main sab khud","A staff member":"Ek staff","A family member":"Family member","An outside agency / person":"Bahar ki agency / banda","Nobody really":"Sach mein koi nahi"}},
+  attribution:{q:"Aap dekh paate hain ki kaunsa ad ya platform har customer laaya?", o:{"Yes — clearly":"Haan — saaf","Roughly":"Lagbhag","No — I can't really tell":"Nahi — pata nahi chalta"}},
+  solution_belief:{q:"Aapke hisaab se, aapke business ke liye asal mein kya cheez theek karegi?", hint:"Jo bhi lagu ho, sab chunein", o:{"Better organic / free visibility (Google, Maps, SEO)":"Behtar organic / free visibility (Google, Maps, SEO)","Ads on Meta (Facebook)":"Meta (Facebook) par ads","Ads on Instagram":"Instagram par ads","Ads on WhatsApp":"WhatsApp par ads","A voice bot that handles calls":"Ek voice bot jo call sambhaale","A WhatsApp assistant that handles chats":"Ek WhatsApp assistant jo chat sambhaale","Nothing really needs fixing":"Kuch theek karne ki zaroorat nahi"}},
+  comm_mode:{q:"Agar iske liye help mile, toh aap unse kaise judna chahenge?", hint:"Jo bhi lagu ho, sab chunein", o:{"A real human":"Ek asli insaan","On WhatsApp":"WhatsApp par","Raise a ticket":"Ticket raise karein"}},
+  one_handoff:{q:"Aakhri — agar kal inme se SIRF EK cheez theek ho jaaye, toh pehle kaunsi chunenge?", o:{"Replying to customer messages":"Customer messages ka reply","Answering & returning calls":"Call uthana aur wapas karna","Keeping my Google listing fresh":"Google listing fresh rakhna","Getting & replying to reviews":"Reviews laana aur reply karna","Posting on Facebook / Instagram":"Facebook / Instagram par post karna","Running my ads":"Apne ads chalana","I'd rather keep doing it all myself":"Main khud hi karta rahoon"}}
+};
+function tQ(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].q) || q.q; }
+function tHint(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].hint) || q.hint || ""; }
+function tO(q,o){ return (uiLang==='hi' && HI[q.id] && HI[q.id].o && HI[q.id].o[o]) || o; }
+function tGroup(label){ return (uiLang==='hi' && HI._groups[label]) || label; }
+function tSecT(sec){ return (uiLang==='hi' && HI._sec[sec.letter] && HI._sec[sec.letter].t) || sec.title; }
+function tSecB(sec){ return (uiLang==='hi' && HI._sec[sec.letter] && HI._sec[sec.letter].b) || sec.blurb; }
+function tS1(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].s1) || q.s1label || q.q; }
+function tUI(hi,en){ return uiLang==='hi' ? hi : en; }
 const SLIDE1_QS = QS.filter(q=>q.onSlide1);          // interviewer-observable, captured on slide 1
 const TOTAL_Q = QS.filter(q=>!q.onSlide1).length;    // questions actually asked in the flow
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -516,11 +588,15 @@ function renderShowcase(){
 function renderStart(){
   const selHtml = SLIDE1_QS.map(q=>{
     const cur=(ANS.answers[q.id]||[])[0]||"";
-    return `<label>${esc(q.s1label||q.q)}
+    const otherSel = cur===OTHER;
+    return `<label>${esc(tS1(q))}
       <select class="field s1sel" data-qid="${q.id}">
-        <option value="">— select —</option>
-        ${q.opts.map(o=>`<option ${o===cur?'selected':''}>${esc(o)}</option>`).join("")}
-      </select></label>`;
+        <option value="">${tUI('— chunein —','— select —')}</option>
+        ${q.opts.map(o=>`<option value="${esc(o)}" ${o===cur?'selected':''}>${esc(tO(q,o))}</option>`).join("")}
+        ${q.noOther?'':`<option value="${OTHER}" ${otherSel?'selected':''}>${tUI('Anya…','Other…')}</option>`}
+      </select>
+      ${q.noOther?'':`<input type="text" class="field s1other" data-qid="${q.id}" placeholder="${tUI('Yahan type karein','Type the '+esc((q.s1label||q.q).toLowerCase()))}" value="${esc(ANS.other[q.id]||'')}" style="margin-top:8px${otherSel?'':';display:none'}">`}
+    </label>`;
   }).join("");
   stageEl().innerHTML = `
     <div class="qnum"><span class="seclabel">📋 New survey</span></div>
@@ -542,7 +618,12 @@ function renderStart(){
   stageEl().querySelectorAll(".s1sel").forEach(sel=> sel.addEventListener("change",e=>{
     const qid=e.target.dataset.qid, v=e.target.value;
     if(v) ANS.answers[qid]=[v]; else delete ANS.answers[qid];
+    const ot=stageEl().querySelector(`.s1other[data-qid="${qid}"]`);
+    if(ot){ ot.style.display = (v===OTHER)?'block':'none'; if(v===OTHER) ot.focus(); }
     saveDraft();
+  }));
+  stageEl().querySelectorAll(".s1other").forEach(inp=> inp.addEventListener("input",e=>{
+    ANS.other[e.target.dataset.qid]=e.target.value; saveDraft();
   }));
   navEl().innerHTML = `${step>0?'<button class="btn ghost" id="back">Back</button>':''}<button class="btn go" id="next" style="flex:1">Continue →</button>`;
   bindNav();
@@ -552,8 +633,8 @@ function renderIntro(sec){
   stageEl().innerHTML = `<div class="intro-card">
     <div class="intro-emoji">${sec.emoji}</div>
     <div class="intro-letter">SECTION ${sec.letter}</div>
-    <h2>${esc(sec.title)}</h2>
-    <p>${esc(sec.blurb)}</p>
+    <h2>${esc(tSecT(sec))}</h2>
+    <p>${esc(tSecB(sec))}</p>
   </div>`;
   navEl().innerHTML = `${step>0?'<button class="btn ghost" id="back">Back</button>':''}
     <button class="btn go" id="next">Start →</button>`;
@@ -564,20 +645,20 @@ function renderQ(q, sec){
   const cur = ANS.answers[q.id] || [];
   const isSel = o => cur.includes(o);
   const optBtn = o=>`<button class="opt ${q.multi?'':'radio'} ${isSel(o)?'sel':''}" data-o="${esc(o)}">
-      <span class="box">${CHECK}</span><span>${esc(o)}</span></button>`;
+      <span class="box">${CHECK}</span><span>${esc(tO(q,o))}</span></button>`;
   const opts = (q.groups
-      ? q.groups.map(g=>`<div class="optgroup"><div class="optgroup-h ${g.tone||''}">${esc(g.label)}</div>${g.opts.map(optBtn).join("")}</div>`).join("")
+      ? q.groups.map(g=>`<div class="optgroup"><div class="optgroup-h ${g.tone||''}">${esc(tGroup(g.label))}</div>${g.opts.map(optBtn).join("")}</div>`).join("")
       : q.opts.map(optBtn).join(""))
     + (q.noOther?'':`<button class="opt other ${isSel(OTHER)?'sel':''}" data-o="${OTHER}">
-      <span class="box">${CHECK}</span><span>Other</span></button>`);
+      <span class="box">${CHECK}</span><span>${tUI('Anya','Other')}</span></button>`);
   const otherShown = !q.noOther && isSel(OTHER);
   let qIndex=0; for(let i=0;i<=step;i++){ if(STEPS[i].kind==="q" && qShown(STEPS[i].q)) qIndex++; }
   stageEl().innerHTML = `
-    <div class="qnum"><span class="seclabel">${sec.emoji} ${sec.letter}</span> Question ${qIndex} of ${flowTotal()}</div>
-    <div class="qtitle">${esc(q.q)}</div>
-    ${q.hint?`<div class="qhint pill">${esc(q.hint)}</div>`:``}
+    <div class="qnum"><span class="seclabel">${sec.emoji} ${sec.letter}</span> ${tUI('Sawaal','Question')} ${qIndex} ${tUI('/','of')} ${flowTotal()}</div>
+    <div class="qtitle">${esc(tQ(q))}</div>
+    ${q.hint?`<div class="qhint pill">${esc(tHint(q))}</div>`:``}
     <div class="opts">${opts}</div>
-    ${q.noOther?'':`<input type="text" class="field" id="otherText" placeholder="Type their answer" ${otherShown?'':'style="display:none"'} value="${esc(ANS.other[q.id]||'')}">`}
+    ${q.noOther?'':`<input type="text" class="field" id="otherText" placeholder="${tUI('Unka jawab likhein','Type their answer')}" ${otherShown?'':'style="display:none"'} value="${esc(ANS.other[q.id]||'')}">`}
     ${q.contact?`<div class="subfields" id="contact" ${isSel('Yes')?'':'style="display:none"'}>
         <label>Name &amp; shop name (optional)<input type="text" class="field" id="cName" value="${esc(ANS.contactName)}"></label>
         <label>Phone (optional, only with their OK)<input type="text" class="field" id="cPhone" inputmode="tel" value="${esc(ANS.contactPhone)}"></label>
@@ -886,6 +967,16 @@ document.getElementById("toResultsFromGate").onclick=()=>{ /* allow peeking resu
   window.addEventListener("online", flushQueue);
   window.addEventListener("offline", renderNet);
   setInterval(flushQueue, 20000);
+  // language toggle (EN / Hinglish) — re-renders the current question in the chosen language
+  (function(){
+    const tg=document.getElementById("langTog"); if(!tg) return;
+    const paint=()=>tg.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.l===uiLang));
+    tg.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+      uiLang=b.dataset.l; localStorage.setItem("si_uilang", uiLang); paint();
+      if(document.getElementById("gate").hidden){ try{ render(); }catch(e){} }  // re-render current step if a survey is open
+    }));
+    paint();
+  })();
   SURVEYOR=localStorage.getItem(WHOKEY);
   if(SURVEYOR) showApp(); else renderGate();   // remembered after first entry; "switch" re-opens the gate
 })();
