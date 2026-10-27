@@ -82,6 +82,14 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
 .opt.sel .box svg{opacity:1;transform:scale(1)}
 .opt.other{border-style:dashed}
 .opt.other.sel{border-style:solid}
+/* grouped options (e.g. Organic vs Ads) */
+.optgroup{display:flex;flex-direction:column;gap:11px}
+.opts .optgroup + .optgroup{margin-top:16px}
+.optgroup-h{display:flex;align-items:center;gap:12px;margin:2px 2px 1px;
+  font-family:var(--f-mono);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.optgroup-h::after{content:"";flex:1;height:1px;background:var(--line)}
+.optgroup-h.organic{color:var(--teal)}
+.optgroup-h.paid{color:var(--marigold)}
 .field{font:inherit;font-size:16px;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:100%;margin-top:4px}
 select.field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6b66' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:18px;padding-right:42px}
 .field:focus{outline:none;border-color:var(--teal)}
@@ -284,6 +292,9 @@ const COND = {
   doesMarketing:a => !!(a.who && a.who[0]!=="Nobody right now"),
   // agency questions only if they use an agency / freelancer
   usesAgency:   a => !!(a.who && (a.who[0]==="A local agency" || a.who[0]==="A freelancer")),
+  // per-channel ad spend only if they actually run that kind of ad (from the "platforms" multi-select)
+  runsGoogleAds:a => !!(a.platforms && a.platforms.includes("Google Ads (Search / Maps)")),
+  runsMetaAds:  a => !!(a.platforms && a.platforms.includes("Meta ads (Facebook)")),
 };
 const SECTIONS = [
  { letter:"A", title:"About you", emoji:"👋", blurb:"A few quick things about who you are.", qs:[
@@ -302,14 +313,18 @@ const SECTIONS = [
   {id:"sales", q:"Rough monthly sales (all outlets)", opts:["Under ₹5 lakh","₹5–20 lakh","₹20 lakh – ₹1 crore","Above ₹1 crore","Prefer not to say"], noOther:true},
  ]},
  { letter:"C", title:"How you get customers today", emoji:"🧲", blurb:"Where business comes from right now.", qs:[
-  {id:"sources", q:"Where do most of your new customers come from?", hint:"Pick all that apply", multi:true, opts:["Walk-ins / passing by","Word of mouth / referrals","Google search or Google Maps","Instagram / Facebook","WhatsApp","Justdial / Practo / Zomato / other apps","Paid ads","Pamphlets / newspaper / hoardings"]},
+  {id:"sources", q:"Where do most of your new customers come from?", hint:"Pick all that apply", multi:true, groups:[
+    {label:"Organic — free / unpaid", tone:"organic", opts:["Walk-ins / passing by","Word of mouth / referrals","Google — Search / Maps (organic)","Facebook page (organic)","Instagram (organic)","WhatsApp (organic)","Justdial / Practo / Zomato / other apps","Pamphlets / newspaper / hoardings"]},
+    {label:"Ads — paid", tone:"paid", opts:["Google Ads","Facebook ads","Instagram ads","WhatsApp ads"]}
+  ]},
   {id:"presence", q:"Which of these do you have for your business?", hint:"Pick all that apply", multi:true, opts:["A page on Google / Google Maps","A website","Instagram page","Facebook page","WhatsApp Business","None of these"]},
  ]},
  { letter:"D", title:"Your digital marketing", emoji:"📣", blurb:"Agencies, ads, and what you spend.", qs:[
   {id:"who", q:"Who runs your digital marketing?", opts:["A local agency","A freelancer","My own staff","I do it myself","A family member","Nobody right now"]},
   {id:"platforms", q:"Where do you run ads?", hint:"Pick all that apply", multi:true, exclusive:["I don't run ads"], opts:["Google Ads (Search / Maps)","Meta ads (Facebook)","Instagram ads","WhatsApp ads","YouTube ads","Justdial / Practo / other apps","I don't run ads"], cond:COND.doesMarketing},
   {id:"fee", q:"How much do you pay the agency / freelancer per month? (fee only, not ad money)", opts:["Nothing / don't use one","Under ₹5,000","₹5,000–15,000","₹15,000–30,000","₹30,000–50,000","Above ₹50,000"], cond:COND.usesAgency},
-  {id:"adspend", q:"How much do you spend on ads per month? (money paid to Google / Facebook)", opts:["Nothing","Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], cond:COND.doesMarketing},
+  {id:"adspend_google", q:"How much do you spend on Google Ads per month? (media spend paid to Google)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsGoogleAds},
+  {id:"adspend_meta", q:"How much do you spend on Facebook ads per month? (media spend paid to Meta)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsMetaAds},
   {id:"tenure", q:"How long have you been with your current agency?", opts:["Less than 6 months","6–12 months","1–2 years","More than 2 years","Don't have one"], cond:COND.usesAgency},
   {id:"switched", q:"How many agencies have you changed in the last 2 years?", opts:["None","1","2","3 or more"], noOther:true, cond:COND.usesAgency},
   {id:"sat", q:"How happy are you with your agency / current setup?", opts:["Very unhappy","Unhappy","Okay","Happy","Very happy"], noOther:true, cond:COND.doesMarketing},
@@ -343,6 +358,8 @@ const SECTIONS = [
  ]},
 ];
 const QS = SECTIONS.flatMap(s=>s.qs);
+// questions can declare grouped options (q.groups); flatten them into q.opts so results/CSV/nav stay unchanged
+QS.forEach(q=>{ if(q.groups && !q.opts) q.opts = q.groups.flatMap(g=>g.opts); });
 const SLIDE1_QS = QS.filter(q=>q.onSlide1);          // interviewer-observable, captured on slide 1
 const TOTAL_Q = QS.filter(q=>!q.onSlide1).length;    // questions actually asked in the flow
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -546,9 +563,11 @@ function renderIntro(sec){
 function renderQ(q, sec){
   const cur = ANS.answers[q.id] || [];
   const isSel = o => cur.includes(o);
-  const opts = q.opts.map(o=>`
-    <button class="opt ${q.multi?'':'radio'} ${isSel(o)?'sel':''}" data-o="${esc(o)}">
-      <span class="box">${CHECK}</span><span>${esc(o)}</span></button>`).join("")
+  const optBtn = o=>`<button class="opt ${q.multi?'':'radio'} ${isSel(o)?'sel':''}" data-o="${esc(o)}">
+      <span class="box">${CHECK}</span><span>${esc(o)}</span></button>`;
+  const opts = (q.groups
+      ? q.groups.map(g=>`<div class="optgroup"><div class="optgroup-h ${g.tone||''}">${esc(g.label)}</div>${g.opts.map(optBtn).join("")}</div>`).join("")
+      : q.opts.map(optBtn).join(""))
     + (q.noOther?'':`<button class="opt other ${isSel(OTHER)?'sel':''}" data-o="${OTHER}">
       <span class="box">${CHECK}</span><span>Other</span></button>`);
   const otherShown = !q.noOther && isSel(OTHER);
