@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Metro Seller Survey · SingleInterface</title>
+<style>body{margin:0}*{box-sizing:border-box}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --paper:#f4f6f3; --surface:#ffffff; --ink:#15302b; --muted:#5a6b66; --line:#dbe2de;
+  --teal:#0f6b5c; --teal-soft:#e2efeb; --marigold:#d99312; --marigold-soft:#fbefd6;
+  --good:#1d7a4c; --bad:#b4442e;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0f1715; --surface:#17221f; --ink:#e6ece9; --muted:#9aaba5; --line:#2a3834;
+  --teal:#4fb9a3; --teal-soft:#1c3530; --marigold:#f0b43c; --marigold-soft:#3a2f17;
+  --good:#5cc48f; --bad:#e2775f; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0f1715; --surface:#17221f; --ink:#e6ece9; --muted:#9aaba5; --line:#2a3834;
+  --teal:#4fb9a3; --teal-soft:#1c3530; --marigold:#f0b43c; --marigold-soft:#3a2f17;
+  --good:#5cc48f; --bad:#e2775f; color-scheme:dark }
+
+html,body{height:100%}
+[hidden]{display:none!important}  /* ensure the hidden attribute always wins over display rules */
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+.app{max-width:720px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);font-weight:600}
+
+/* ---------- top chrome ---------- */
+.topbar{display:flex;align-items:center;gap:10px;padding:16px 2px 10px;position:sticky;top:0;background:var(--paper);z-index:8}
+.topbar .brand{font-family:var(--f-display);font-weight:800;font-size:16px}
+.topbar .brand small{display:block;font-family:var(--f-body);font-weight:600;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--teal)}
+.topbar .right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.who{font-weight:600;color:var(--ink)}
+.linkbtn{appearance:none;border:0;background:none;color:var(--teal);font:600 12.5px var(--f-body);cursor:pointer;padding:0}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--bad)} .dot.on{background:var(--good)}
+.qbadge{font-family:var(--f-mono);font-size:11px;background:var(--marigold-soft);color:#7a5407;padding:2px 8px;border-radius:999px}
+.net{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px}
+
+/* progress rail */
+.rail{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin:2px 2px 4px}
+.rail > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--marigold));border-radius:999px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.meta{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);padding:0 2px 4px}
+.meta .cheer{color:var(--teal);font-weight:600;font-family:var(--f-body)}
+
+/* ---------- stage (one card at a time) ---------- */
+.stageWrap{flex:1;display:flex;flex-direction:column;padding-bottom:12px}
+.stage{flex:1;display:flex;flex-direction:column;justify-content:flex-start;padding-top:8px}
+@keyframes inR{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+.stage.dir-next{animation:inR .26s ease}
+.stage.dir-prev{animation:inL .26s ease}
+@media (prefers-reduced-motion: reduce){.stage{animation:none!important}}
+
+.qnum{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.qnum .seclabel{background:var(--teal-soft);color:var(--teal);padding:2px 9px;border-radius:999px;font-weight:600}
+.qtitle{font-size:clamp(21px,4.5vw,27px);font-weight:700;line-height:1.2;margin-bottom:6px}
+.qhint{color:var(--muted);font-size:14px;margin-bottom:18px}
+.qhint.pill{display:inline-block;background:var(--marigold-soft);color:#7a5407;padding:3px 10px;border-radius:999px;font-weight:600;font-size:12.5px}
+
+/* big stacked options */
+.opts{display:flex;flex-direction:column;gap:11px;margin-top:4px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:14px 18px;
+  border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);
+  font-size:17px;text-align:left;cursor:pointer;transition:border-color .12s,background .12s,transform .08s;font-family:inherit}
+.opt:active{transform:scale(.985)}
+.opt .box{flex:0 0 26px;width:26px;height:26px;border:2px solid #b7c3bd;border-radius:8px;display:grid;place-items:center;transition:.12s}
+.opt.radio .box{border-radius:50%}
+.opt .box svg{width:16px;height:16px;opacity:0;transform:scale(.5);transition:.12s;stroke:#fff}
+.opt.sel{border-color:var(--teal);background:var(--teal-soft);font-weight:600}
+.opt.sel .box{background:var(--teal);border-color:var(--teal);animation:pop .25s ease}
+.opt.sel .box svg{opacity:1;transform:scale(1)}
+.opt.other{border-style:dashed}
+.opt.other.sel{border-style:solid}
+.field{font:inherit;font-size:16px;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);width:100%;margin-top:4px}
+select.field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6b66' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:18px;padding-right:42px}
+.field:focus{outline:none;border-color:var(--teal)}
+textarea.field{min-height:120px;resize:vertical}
+.subfields{display:grid;gap:10px;margin-top:12px}
+.subfields label{font-size:13px;color:var(--muted);display:grid;gap:5px}
+
+/* section intro card */
+.intro-card{text-align:center;padding:24px 10px;display:grid;gap:14px;justify-items:center;margin:auto 0}
+.intro-emoji{font-size:64px;line-height:1;animation:pop .4s ease}
+.intro-letter{font-family:var(--f-mono);font-size:13px;color:var(--marigold);letter-spacing:.1em}
+.intro-card h2{font-size:clamp(26px,6vw,34px);font-weight:800}
+.intro-card p{color:var(--muted);max-width:46ch;margin:0}
+
+/* finish */
+.finish{text-align:center;padding:16px 10px;display:grid;gap:14px;justify-items:center;margin:auto 0}
+.finish .big{font-size:72px;line-height:1;animation:pop .5s ease}
+.finish h2{font-size:clamp(26px,6vw,34px);font-weight:800}
+.finish .count{font-family:var(--f-mono);color:var(--muted)}
+
+/* footer nav */
+.nav{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--paper) 26%);
+  padding:14px 0 calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:12px}
+.btn{appearance:none;border:0;border-radius:14px;font:700 17px var(--f-body);padding:16px 22px;cursor:pointer;transition:filter .12s,transform .08s}
+.btn:active{transform:scale(.98)}
+.btn.primary{flex:1;background:var(--marigold);color:#1b1408}
+.btn.go{flex:1;background:var(--teal);color:#fff}
+.btn.ghost{flex:0 0 108px;background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.status{font-size:13.5px;text-align:center;min-height:18px;padding-bottom:6px}
+.status.ok{color:var(--good)} .status.err{color:var(--bad)}
+
+/* surveyor gate */
+.gate{display:grid;gap:14px;max-width:460px;margin:24px auto;padding:0 2px}
+.gate p{color:var(--muted);margin:0}
+.who-opt{display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:14px 18px;border:2px solid var(--line);border-radius:14px;background:var(--surface);font-size:18px;cursor:pointer;color:var(--ink);transition:.12s}
+.who-opt:hover{border-color:var(--teal)}
+.who-opt:active{transform:scale(.99)}
+.setup{position:relative;background:#fdecea;border:1px solid #f3c2bb;color:#8a2d1a;border-radius:12px;padding:12px 38px 12px 14px;font-size:13.5px}
+.setup code{background:rgba(0,0,0,.06);padding:1px 6px;border-radius:5px}
+.setup-x{position:absolute;top:8px;right:10px;appearance:none;border:0;background:none;color:#8a2d1a;font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px}
+.setup-x:hover{background:rgba(0,0,0,.07)}
+.namechips{display:flex;flex-wrap:wrap;gap:8px}
+.namechip{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:600 14px var(--f-body);cursor:pointer}
+.namechip:hover{border-color:var(--teal)}
+
+/* results */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:4px 0 20px}
+.tab{appearance:none;border:0;background:none;font:600 15px var(--f-body);color:var(--muted);padding:11px 14px;border-bottom:3px solid transparent;cursor:pointer;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--marigold)}
+.tab .n{font-family:var(--f-mono);font-size:12px;background:var(--teal-soft);color:var(--teal);padding:1px 7px;border-radius:10px;margin-left:6px}
+.signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+.sig{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:4px;align-content:start}
+.sig .v{font-family:var(--f-display);font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.sig .l{font-size:13px;color:var(--muted)} .sig .b{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.rq{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:8px;margin-bottom:12px}
+.rq h3{font-family:var(--f-body);font-size:15px;font-weight:600}
+.rq .sub{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 78px;gap:10px;align-items:center;font-size:13.5px}
+.bar .track{position:relative;background:var(--teal-soft);border-radius:4px;overflow:hidden;min-width:0}
+.bar .fill{position:absolute;inset:0 auto 0 0;background:var(--teal);opacity:.28;transition:width .5s ease}
+.bar .lbl{position:relative;padding:6px 8px;overflow-wrap:anywhere}
+.bar .ct{font-family:var(--f-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+.others{font-size:13px;color:var(--muted);padding-left:8px;border-left:2px solid var(--marigold);display:grid;gap:2px}
+.empty{background:var(--surface);border:2px dashed var(--line);border-radius:12px;padding:30px 20px;text-align:center;color:var(--muted);display:grid;gap:8px;justify-items:center}
+.empty strong{color:var(--ink);font-size:16px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.btn.sm{font-size:14px;padding:10px 16px;flex:0 0 auto}
+
+/* confetti */
+.confetti{position:fixed;top:-12px;width:9px;height:15px;border-radius:2px;z-index:60;pointer-events:none}
+@keyframes fall{to{transform:translateY(106vh) rotate(540deg);opacity:.15}}
+
+/* credibility showcase */
+.app.wide{max-width:980px}
+.sc{display:grid;gap:18px}
+.sc-hero{background:linear-gradient(135deg,#0E0071,#0070FC);color:#fff;border-radius:18px;padding:24px 22px 26px;text-align:center}
+.si-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:14px}
+.si-mark{width:40px;height:40px;border-radius:11px;background:#fff;color:#0E0071;font-weight:800;display:grid;place-items:center;font-size:18px;letter-spacing:-.5px}
+.si-word{font-size:22px;font-weight:700;letter-spacing:-.5px;color:#fff}
+.sc-head{color:#fff;font-size:clamp(22px,4.2vw,30px);font-weight:800;line-height:1.15;margin:0 auto;max-width:20ch}
+.sc-sub{color:#cfe0ff;margin:8px 0 0;font-size:15px}
+.sc-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:12px;margin-top:20px}
+.sc-stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:12px 10px}
+.sc-stat b{display:block;font-size:24px;font-weight:800;color:#fff;line-height:1.05}
+.sc-stat span{font-size:11.5px;color:#cfe0ff;margin-top:4px;display:block;line-height:1.3}
+.sc-pick-h{font-weight:700;font-size:16px;color:var(--ink);margin-bottom:10px}
+.sc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.sc-chip{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 15px;font:600 14px var(--f-body);cursor:pointer}
+.sc-chip:hover{border-color:#0070FC}
+.sc-chip.on{background:#0E0071;border-color:#0E0071;color:#fff}
+.sc-wall{min-height:50px}
+.sc-empty{color:var(--muted);background:var(--surface);border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;font-size:14px}
+.logo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+.logo-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;min-height:58px;display:flex;align-items:center;gap:11px;padding:12px 14px}
+.logo-ico{width:26px;height:26px;object-fit:contain;flex:0 0 26px;border-radius:6px}
+.logo-name{font-weight:700;color:#0E0071;font-size:13.5px;line-height:1.2}
+.sc-more{font-size:12.5px;color:var(--muted);margin-top:10px;text-align:center}
+.sc-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;border-top:1px solid var(--line);padding-top:16px}
+.sc-badges span{font-size:12px;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+
+/* jump drawer */
+.fill-tools{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+.jump-btn{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 14px;font:600 14px var(--f-body);cursor:pointer;white-space:nowrap}
+.jump-btn:hover{border-color:var(--teal)}
+.cur-sec{font-family:var(--f-mono);font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
+.jump-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;opacity:0;transition:opacity .2s}
+.jump-backdrop.open{opacity:1}
+.jump-panel{position:fixed;top:0;right:0;height:100%;width:min(390px,88vw);background:var(--paper);z-index:41;transform:translateX(100%);transition:transform .22s ease;overflow-y:auto;box-shadow:-12px 0 44px rgba(0,0,0,.28);padding:14px 14px calc(22px + env(safe-area-inset-bottom,0px))}
+.jump-panel.open{transform:none}
+.jump-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;position:sticky;top:0;background:var(--paper);padding:6px 2px 10px;border-bottom:1px solid var(--line)}
+.jump-head b{font-family:var(--f-display);font-size:19px}
+.jump-head button{appearance:none;border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted);padding:2px 8px;line-height:1}
+.jump-sec{display:block;width:100%;text-align:left;font-family:var(--f-mono);font-size:11.5px;font-weight:600;color:var(--teal);margin:14px 0 4px;text-transform:uppercase;letter-spacing:.04em;border:0;background:none;cursor:pointer;padding:5px 8px;border-radius:8px}
+.jump-sec:hover{background:var(--teal-soft)}
+.jump-q{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;border:0;background:none;color:var(--ink);font-family:var(--f-body);font-size:14px;cursor:pointer;padding:10px;border-radius:10px;line-height:1.35}
+.jump-q:hover{background:var(--surface)}
+.jump-q.cur{background:var(--marigold-soft);font-weight:600}
+.jump-q .j-ck{flex:0 0 16px;color:var(--good);font-weight:800}
+.jump-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;color:var(--ink);font:600 14px var(--f-body);cursor:pointer;padding:11px 10px;border-radius:10px}
+.jump-row:hover{background:var(--surface)}
+.jump-row.cur{background:var(--marigold-soft)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">Metro Seller Survey<small>SingleInterface · SMB research</small></div>
+    <div class="right" id="chrome" hidden>
+      <span class="who">👤 <span id="whoName">—</span></span>
+      <button class="linkbtn" id="switchWho">switch</button>
+      <span class="qbadge" id="queueBadge" hidden>0</span>
+      <span class="net"><span class="dot" id="netDot"></span><span id="netTxt">offline</span></span>
+    </div>
+  </div>
+
+  <!-- gate -->
+  <section id="gate" class="gate" hidden>
+    <div id="setupWarn"></div>
+    <div class="eyebrow">Field survey</div>
+    <h2 style="font-size:26px;font-weight:800">Your name (interviewer)</h2>
+    <div id="whoList" style="display:grid;gap:12px"></div>
+    <button class="linkbtn" id="toResultsFromGate" style="justify-self:start;margin-top:6px">View results / export →</button>
+  </section>
+
+  <!-- tabs (shown after sign in) -->
+  <nav class="tabs" id="tabs" role="tablist" hidden>
+    <button class="tab" role="tab" id="tab-fill" aria-selected="true">Survey</button>
+    <button class="tab" role="tab" id="tab-results" aria-selected="false">Results <span class="n" id="count">0</span></button>
+  </nav>
+
+  <!-- FILL view: interactive stepper -->
+  <section id="view-fill" hidden>
+    <div class="fill-tools">
+      <button class="jump-btn" id="openJump" type="button">☰ Jump to section / question</button>
+      <span class="cur-sec" id="curSec"></span>
+    </div>
+    <div class="rail"><i id="prog"></i></div>
+    <div class="meta"><span id="stepMeta">—</span><span class="cheer" id="cheer"></span></div>
+    <div class="stageWrap">
+      <div class="stage" id="stage"></div>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="nav" id="nav"></div>
+    </div>
+  </section>
+
+  <!-- jump drawer -->
+  <div class="jump-backdrop" id="jumpBack" hidden></div>
+  <aside class="jump-panel" id="jump" aria-label="Jump to section or question"></aside>
+
+  <!-- RESULTS view -->
+  <section id="view-results" hidden>
+    <div class="toolbar">
+      <button class="btn ghost sm" type="button" id="refresh">↻ Refresh</button>
+      <button class="btn primary sm" type="button" id="export">⬇ Download CSV</button>
+      <span class="status" id="exportStatus" style="text-align:left"></span>
+    </div>
+    <div id="results"></div>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG — fill in once, then share this single file to every tablet.
+   Setup steps are in README.md (5-minute Supabase project).
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: "https://psybsqqkvmltaqzoczwd.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeWJzcXFrdm1sdGFxem9jendkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDM5NzgsImV4cCI6MjEwODU3OTk3OH0.Qn3jBB7IghITsvRhEESvbySd-7E6RlCCFd8QOWBgv8k",
+  TEAM: ["Nishtha","Surveyor 2","Surveyor 3","Surveyor 4","Surveyor 5"]
+};
+
+const OTHER = "__other";
+/* conditional-display helpers — a question with cond() only shows when it returns true.
+   `a` is the answers map (id -> array of chosen values). */
+const COND = {
+  // generation only makes sense for an owner-type role — hidden for a manager, or until a role is picked
+  isOwner:      a => !!(a.role && ["Owner","Partner / co-owner","Family member who runs it"].includes(a.role[0])),
+  // marketing-depth only if they actually do marketing — hidden for "Nobody right now", or until "who" is picked
+  doesMarketing:a => !!(a.who && a.who[0]!=="Nobody right now"),
+  // agency questions only if they use an agency / freelancer
+  usesAgency:   a => !!(a.who && (a.who[0]==="A local agency" || a.who[0]==="A freelancer")),
+};
+const SECTIONS = [
+ { letter:"A", title:"About you", emoji:"👋", blurb:"A few quick things about who you are.", qs:[
+  {id:"role", q:"What is your role in the business?", opts:["Owner","Partner / co-owner","Family member who runs it","Manager (employee)"]},
+  {id:"generation", q:"Is this a first-generation business, or has it been passed down the family?", opts:["First generation — I/we started it","Second generation — from my parents","Third generation or older","I bought it / took it over / franchise"], cond:COND.isOwner},
+  {id:"age", q:"Your age", opts:["Under 25","25–34","35–44","45–54","55+"], noOther:true},
+  {id:"gender", q:"Gender", opts:["Male","Female","Prefer not to say"], noOther:true, onSlide1:true, s1label:"Respondent's gender"},
+  {id:"edu", q:"Highest education", opts:["School (10th / 12th)","Graduate","Post-graduate / MBA","Professional (Doctor, CA, Engineer)"]},
+  {id:"lang", q:"Which language do you prefer on your phone for business?", opts:["English","Hindi","Hinglish (mix)","Regional language"], onSlide1:true, s1label:"Language of the conversation"},
+ ]},
+ { letter:"B", title:"Your business", emoji:"🏪", blurb:"Tell us about the shop or clinic.", qs:[
+  {id:"type", q:"What kind of business is it?", opts:["Clinic / doctor","Diagnostic lab","Dentist / physio / practitioner","Play school / coaching","Salon / spa","Gym / fitness","Restaurant / café","Retail shop","Home services / repairs","Real estate / interiors"], onSlide1:true, s1label:"Business type"},
+  {id:"locations", q:"How many outlets or branches do you have?", opts:["1","2–3","4–10","More than 10"]},
+  {id:"years", q:"How old is the business?", opts:["Less than 2 years","2–5 years","5–10 years","More than 10 years"]},
+  {id:"team", q:"How many people work with you?", opts:["Just me","2–5","6–20","More than 20"]},
+  {id:"sales", q:"Rough monthly sales (all outlets)", opts:["Under ₹5 lakh","₹5–20 lakh","₹20 lakh – ₹1 crore","Above ₹1 crore","Prefer not to say"], noOther:true},
+ ]},
+ { letter:"C", title:"How you get customers today", emoji:"🧲", blurb:"Where business comes from right now.", qs:[
+  {id:"sources", q:"Where do most of your new customers come from?", hint:"Pick all that apply", multi:true, opts:["Walk-ins / passing by","Word of mouth / referrals","Google search or Google Maps","Instagram / Facebook","WhatsApp","Justdial / Practo / Zomato / other apps","Paid ads","Pamphlets / newspaper / hoardings"]},
+  {id:"presence", q:"Which of these do you have for your business?", hint:"Pick all that apply", multi:true, opts:["A page on Google / Google Maps","A website","Instagram page","Facebook page","WhatsApp Business","None of these"]},
+ ]},
+ { letter:"D", title:"Your digital marketing", emoji:"📣", blurb:"Agencies, ads, and what you spend.", qs:[
+  {id:"who", q:"Who runs your digital marketing?", opts:["A local agency","A freelancer","My own staff","I do it myself","A family member","Nobody right now"]},
+  {id:"platforms", q:"Where do you run ads?", hint:"Pick all that apply", multi:true, exclusive:["I don't run ads"], opts:["Google Ads (Search / Maps)","Meta ads (Facebook)","Instagram ads","WhatsApp ads","YouTube ads","Justdial / Practo / other apps","I don't run ads"], cond:COND.doesMarketing},
+  {id:"fee", q:"How much do you pay the agency / freelancer per month? (fee only, not ad money)", opts:["Nothing / don't use one","Under ₹5,000","₹5,000–15,000","₹15,000–30,000","₹30,000–50,000","Above ₹50,000"], cond:COND.usesAgency},
+  {id:"adspend", q:"How much do you spend on ads per month? (money paid to Google / Facebook)", opts:["Nothing","Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], cond:COND.doesMarketing},
+  {id:"tenure", q:"How long have you been with your current agency?", opts:["Less than 6 months","6–12 months","1–2 years","More than 2 years","Don't have one"], cond:COND.usesAgency},
+  {id:"switched", q:"How many agencies have you changed in the last 2 years?", opts:["None","1","2","3 or more"], noOther:true, cond:COND.usesAgency},
+  {id:"sat", q:"How happy are you with your agency / current setup?", opts:["Very unhappy","Unhappy","Okay","Happy","Very happy"], noOther:true, cond:COND.doesMarketing},
+ ]},
+ { letter:"E", title:"Getting customers in", emoji:"🧲", blurb:"What you notice about new customers coming in.", qs:[
+  {id:"customer_trend", q:"Compared with a year ago, is the flow of new customers going up or down?", opts:["Growing steadily","About the same","Slowly dropping","Dropping fast","Hard to say"], noOther:true},
+  {id:"found_online", q:"Right now, search your own business on Google — what do you see?", hint:"Ask them to actually do it on their phone", opts:["I show up on top","I show up, but lower down","Wrong or old information shows","I don't show up at all","I've never checked"], noOther:true},
+  {id:"competitor_check", q:"Now search what a customer would type to find a shop like yours. Who shows up above you?", opts:["I'm at the top","A competitor is above me","Only competitors — I'm not there","Just directories / ads, no real shops","Didn't check"], noOther:true},
+  {id:"enquiry_slip", q:"What happens to the calls and messages you can't get to in time?", opts:["We get back to all of them","We get back to most","Many just slip through","We lose them","Not sure"], noOther:true},
+  {id:"enquiry_volume", q:"On an average day, how many customer enquiries do you get — calls and messages together?", opts:["Under 5","5–15","15–30","30–50","More than 50"], noOther:true},
+  {id:"missed_calls", q:"On a busy day, how many customer calls go unanswered?", opts:["None","1–5","6–15","More than 15","Don't know"], noOther:true},
+ ]},
+ { letter:"F", title:"How you look online", emoji:"📱", blurb:"The things you can open on your phone — your page, posts and reviews.", qs:[
+  {id:"presence_problems", q:"What bothers you about how your business looks online?", hint:"Pick all that apply", multi:true, opts:["My page looks empty or outdated","No recent photos or posts","Bad reviews, or very few","I don't know what to post","No time to keep it updated","Competitors look better than me","I don't have a proper page"]},
+  {id:"reviews_feeling", q:"How do you feel about your Google reviews and ratings?", opts:["Happy with them","They're okay","Worried about them","I don't get many","I never look"], noOther:true},
+  {id:"post_frequency", q:"How often does something new go up — a post, photo or offer?", opts:["Several times a week","About once a week","Once in a while","Rarely or never"], noOther:true},
+  {id:"creatives", q:"Who makes the photos, posts and offers you put out?", opts:["I make them on my phone","A staff member does","A designer / agency","We rarely make any","We don't post at all"], noOther:true},
+  {id:"creative_blocker", q:"What most gets in the way of putting out good photos & posts regularly?", hint:"Pick all that apply", multi:true, opts:["No time to make them","Don't know what to post","No one to design / edit","They look unprofessional","Run out of ideas","Too costly to outsource","Nothing — we manage fine"]},
+  {id:"search_terms", q:"Do you know the exact words customers type into Google to find a business like yours?", opts:["Yes — clearly","Some idea","No — I don't know"], noOther:true},
+ ]},
+ { letter:"G", title:"Running it all yourself", emoji:"⏳", blurb:"Time, people and keeping on top of everything.", qs:[
+  {id:"running_problems", q:"What's hard about running all of this day to day?", hint:"Pick all that apply", multi:true, opts:["No time for it","I'm doing everything myself","No staff with the right skills","Can't afford to hire help","I don't know how to do it","Money spent but no clear result","Too many apps and tools to manage"]},
+  {id:"owner_time", q:"How much of your own time goes into customers and online stuff each day?", opts:["Almost none","Under 1 hour","1–2 hours","More than 2 hours"], noOther:true},
+  {id:"who_does_digital", q:"Who actually keeps up your online presence and replies to customers?", opts:["I do it all myself","A staff member","A family member","An outside agency / person","Nobody really"]},
+  {id:"attribution", q:"Can you see which ad or platform actually brought you each customer?", opts:["Yes — clearly","Roughly","No — I can't really tell"], noOther:true},
+ ]},
+ { letter:"H", title:"What they think would fix it", emoji:"💡", blurb:"Their own view — not a pitch.", qs:[
+  {id:"solution_belief", q:"In your own view, what would actually fix this for your business?", hint:"Pick all that apply", multi:true, exclusive:["Nothing really needs fixing"], opts:["Better organic / free visibility (Google, Maps, SEO)","Paid ads (Google Ads)","Ads on Meta (Facebook)","Ads on Instagram","Ads on WhatsApp","A voice bot that handles calls","A WhatsApp assistant that handles chats","Nothing really needs fixing"]},
+  {id:"comm_mode", q:"If you had help for all this, how would you want to reach them?", hint:"Pick all that apply", multi:true, opts:["A real human","On WhatsApp","Raise a ticket"]},
+  {id:"one_handoff", q:"Last one — if you could get just ONE of these fixed for you tomorrow, which would you pick first?", opts:["Replying to customer messages","Answering & returning calls","Keeping my Google listing fresh","Getting & replying to reviews","Posting on Facebook / Instagram","Running my ads","I'd rather keep doing it all myself"]},
+ ]},
+];
+const QS = SECTIONS.flatMap(s=>s.qs);
+const SLIDE1_QS = QS.filter(q=>q.onSlide1);          // interviewer-observable, captured on slide 1
+const TOTAL_Q = QS.filter(q=>!q.onSlide1).length;    // questions actually asked in the flow
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---- SingleInterface credibility pitch (shown to the shop owner first) ---- */
+const SI_PITCH = {
+  headline:"Asia's Largest Full-Stack AI Retail Tech Platform",
+  sub:"Powering Digital Marketing to Commerce for Storefronts",
+  stats:[["400K+","Locations powered"],["300+","Brands onboard"],["9.5","G2 ease of business"],["Global","SG · India · APAC · ME · Africa"]],
+  badges:["ISO 27001","SOC 2","Deloitte Fast 50","Great Place To Work","Asia Partners & PayPal Ventures backed"]
+};
+/* hero brands per industry → real logos load from logo.clearbit.com, name shows if a logo fails */
+const CLIENTS = {
+  "Automobiles":[{n:"Tata Motors",d:"tatamotors.com"},{n:"Mahindra",d:"mahindra.com"},{n:"Bajaj Auto",d:"bajajauto.com"},{n:"TVS Motor",d:"tvsmotor.com"},{n:"Honda Cars",d:"hondacarindia.com"},{n:"Kia",d:"kia.com"},{n:"Audi",d:"audi.in"},{n:"Skoda",d:"skoda-auto.com"},{n:"Ather",d:"atherenergy.com"},{n:"Yamaha",d:"yamaha-motor-india.com"},{n:"Apollo Tyres",d:"apollotyres.com"},{n:"CEAT",d:"ceat.com"},{n:"MRF",d:"mrftyres.com"},{n:"JK Tyre",d:"jktyre.com"},{n:"Exide",d:"exideindustries.com"},{n:"Michelin",d:"michelin.in"}],
+  "BFSI":[{n:"SBI Life",d:"sbilife.co.in"},{n:"HDFC Life",d:"hdfclife.com"},{n:"Bajaj Finserv",d:"bajajfinserv.in"},{n:"Bajaj Allianz",d:"bajajallianz.com"},{n:"Angel One",d:"angelone.in"},{n:"Motilal Oswal",d:"motilaloswal.com"},{n:"Tata Capital",d:"tatacapital.com"},{n:"Aditya Birla Capital",d:"adityabirlacapital.com"},{n:"Axis Mutual Fund",d:"axismf.com"},{n:"ICICI Prudential",d:"icicipruamc.com"},{n:"PNB MetLife",d:"pnbmetlife.com"},{n:"HDFC ERGO",d:"hdfcergo.com"},{n:"Shriram Finance",d:"shriramfinance.in"},{n:"AU Small Finance Bank",d:"aubank.in"},{n:"HSBC",d:"hsbc.co.in"},{n:"Policybazaar",d:"policybazaar.com"}],
+  "Consumer Durables":[{n:"Samsung",d:"samsung.com"},{n:"Panasonic",d:"panasonic.com"},{n:"Xiaomi",d:"mi.com"},{n:"OnePlus",d:"oneplus.in"},{n:"HP",d:"hp.com"},{n:"Canon",d:"canon.co.in"},{n:"Epson",d:"epson.co.in"},{n:"Croma",d:"croma.com"},{n:"Reliance Digital",d:"reliancedigital.in"},{n:"Vijay Sales",d:"vijaysales.com"},{n:"Logitech",d:"logitech.com"},{n:"Siemens",d:"siemens.com"},{n:"Bosch",d:"bosch.in"},{n:"Atomberg",d:"atomberg.com"}],
+  "Consumer Goods":[{n:"Puma",d:"puma.com"},{n:"Levi's",d:"levi.com"},{n:"Nykaa",d:"nykaa.com"},{n:"Sephora",d:"sephora.com"},{n:"MAC Cosmetics",d:"maccosmetics.in"},{n:"The Body Shop",d:"thebodyshop.in"},{n:"Manyavar",d:"manyavar.com"},{n:"Shoppers Stop",d:"shoppersstop.com"},{n:"Lifestyle",d:"lifestylestores.com"},{n:"Max Fashion",d:"maxfashion.in"},{n:"U.S. Polo Assn.",d:"uspoloassn.com"},{n:"Pepe Jeans",d:"pepejeans.com"},{n:"Asian Paints",d:"asianpaints.com"},{n:"Godrej Interio",d:"godrejinterio.com"},{n:"Hamleys",d:"hamleys.in"},{n:"Wildcraft",d:"wildcraft.com"}],
+  "Education":[{n:"Aakash Institute",d:"aakash.ac.in"},{n:"Mount Litera Zee School",d:"mountliterazeeschool.com"},{n:"Leverage Edu",d:"leverageedu.com"}],
+  "Health & Fitness":[{n:"Tata 1mg",d:"1mg.com"},{n:"HealthKart",d:"healthkart.com"},{n:"Dr Lal PathLabs",d:"lalpathlabs.com"},{n:"Agilus Diagnostics",d:"agilus.in"},{n:"Lakmé Salon",d:"lakmesalon.in"},{n:"Naturals",d:"naturals.in"},{n:"Amplifon",d:"amplifon.com"},{n:"Jiva Ayurveda",d:"jiva.com"},{n:"Tattva Wellness Spa",d:"tattvaspa.com"}],
+  "Energy":[{n:"BPCL",d:"bharatpetroleum.in"},{n:"HPCL",d:"hindustanpetroleum.com"},{n:"IndianOil",d:"iocl.com"},{n:"Reliance Jio-bp",d:"jiobp.com"}],
+  "Food & Beverages":[{n:"Starbucks",d:"starbucks.in"},{n:"Burger King",d:"burgerking.in"},{n:"KFC",d:"kfc.co.in"},{n:"Domino's",d:"dominos.co.in"},{n:"Haldiram's",d:"haldirams.com"},{n:"7-Eleven",d:"7eleven.com"},{n:"Blue Tokai",d:"bluetokaicoffee.com"},{n:"Wow! Momo",d:"wowmomo.com"},{n:"Pret A Manger",d:"pret.com"},{n:"Monginis",d:"monginis.net"}],
+  "Infrastructure":[{n:"JSW Steel",d:"jsw.in"},{n:"Shree Cement",d:"shreecement.com"},{n:"Orient Cement",d:"orientcement.com"},{n:"Greenlam",d:"greenlam.com"},{n:"Orientbell Tiles",d:"orientbell.com"},{n:"Sintex",d:"sintex.in"}],
+  "Telecom":[{n:"Vi (Vodafone Idea)",d:"myvi.in"},{n:"Jio",d:"jio.com"},{n:"GTPL Hathway",d:"gtpl.net"},{n:"Excitel",d:"excitel.com"}]
+};
+
+/* Build linear step list: interviewee start, credibility showcase, section-intro + questions…, notes, finish */
+const STEPS=[{kind:"start"},{kind:"showcase"}];
+SECTIONS.forEach(s=>{ const qs=s.qs.filter(q=>!q.onSlide1); if(!qs.length) return; STEPS.push({kind:"intro", sec:s}); qs.forEach(q=>STEPS.push({kind:"q", q, sec:s})); });
+STEPS.push({kind:"notes"});
+STEPS.push({kind:"finish"});
+
+/* answer model */
+const BLANK_ANS = { answers:{}, other:{}, qnotes:{}, industry:"", businessName:"", city:"", ownerName:"", contactName:"", contactPhone:"", notes:"" };
+let ANS = {...BLANK_ANS};
+let step = 0, dir = "next";
+
+/* =====================================================================
+   DB (Supabase) + offline queue
+   ===================================================================== */
+let sb=null, RESP=[], SURVEYOR=null;
+const DKEY="seller-survey-draft", QKEY="seller-survey-queue", WHOKEY="seller-survey-surveyor", DEVKEY="seller-survey-device";
+function configured(){ return !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY); }
+function online(){ return navigator.onLine && !!sb; }
+function deviceId(){ let d=localStorage.getItem(DEVKEY); if(!d){ d="dev-"+Math.floor(performance.now()).toString(36)+"-"+(navigator.userAgent.length%97); localStorage.setItem(DEVKEY,d);} return d; }
+function getQueue(){ try{ return JSON.parse(localStorage.getItem(QKEY)||"[]"); }catch(e){ return []; } }
+function setQueue(q){ localStorage.setItem(QKEY, JSON.stringify(q)); renderNet(); }
+function saveDraft(){ try{ localStorage.setItem(DKEY, JSON.stringify({ANS,step})); }catch(e){} }
+
+function renderNet(){
+  const on=online();
+  const d=document.getElementById("netDot"); if(d) d.className="dot"+(on?" on":"");
+  const t=document.getElementById("netTxt"); if(t) t.textContent = on?"online":(configured()?"offline":"not set up");
+  const n=getQueue().length, b=document.getElementById("queueBadge");
+  if(b){ if(n>0){ b.hidden=false; b.textContent=n+" to sync"; } else b.hidden=true; }
+}
+async function flushQueue(){
+  if(!online()){ renderNet(); return; }
+  let q=getQueue(); if(!q.length){ renderNet(); return; }
+  const left=[];
+  for(const row of q){ try{ const {error}=await sb.from("responses").insert(row); if(error) left.push(row);}catch(e){ left.push(row);} }
+  setQueue(left);
+}
+
+/* =====================================================================
+   The interactive stepper
+   ===================================================================== */
+const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const CHEERS = { 0:"Let's go 🙌", 25:"Nice start!", 50:"Halfway there 💪", 75:"Almost done!", 90:"Final stretch 🏁" };
+const stageEl = ()=>document.getElementById("stage");
+const navEl = ()=>document.getElementById("nav");
+function qShown(q){ return !q.cond || q.cond(ANS.answers); }
+function flowTotal(){ return QS.filter(q=>!q.onSlide1 && qShown(q)).length; }
+function stepVisible(i){ const s=STEPS[i]; if(!s) return false; if(s.kind==="q") return qShown(s.q); if(s.kind==="intro") return s.sec.qs.some(q=>!q.onSlide1 && qShown(q)); return true; }
+function answeredCount(){ return QS.filter(q=>!q.onSlide1 && qShown(q) && ANS.answers[q.id] && ANS.answers[q.id].length).length; }
+
+function setProgress(){
+  // progress based on questions answered-position (count questions before current step)
+  const total = flowTotal();
+  let qBefore=0; for(let i=0;i<step;i++){ if(STEPS[i].kind==="q" && qShown(STEPS[i].q)) qBefore++; }
+  const cur = STEPS[step];
+  const pos = cur.kind==="finish" ? total : qBefore;
+  const pctRaw = Math.round(pos/Math.max(1,total)*100);
+  document.getElementById("prog").style.width = (cur.kind==="finish"?100:pctRaw) + "%";
+  // meta line
+  let label="", secName="";
+  if(cur.kind==="showcase"){ label = "Who we are"; secName="Who we are"; }
+  else if(cur.kind==="start"){ label = "New survey"; secName="Start"; }
+  else if(cur.kind==="q"){ label = `Section ${cur.sec.letter} · Q${qBefore+1} of ${total}`; secName=`${cur.sec.emoji} ${cur.sec.title}`; }
+  else if(cur.kind==="intro"){ label = `Section ${cur.sec.letter}`; secName=`${cur.sec.emoji} ${cur.sec.title}`; }
+  else if(cur.kind==="notes"){ label = "Interviewer notes"; secName="✎ Notes"; }
+  else { label = "Done"; secName="🎉 Finish"; }
+  document.getElementById("stepMeta").textContent = label;
+  const cs=document.getElementById("curSec"); if(cs) cs.textContent=secName;
+  const answered = answeredCount();
+  const cheerKey = [90,75,50,25,0].find(k=> Math.round(answered/Math.max(1,total)*100) >= k);
+  document.getElementById("cheer").textContent = cur.kind==="q" ? (CHEERS[cheerKey]||"") : "";
+}
+
+function render(){
+  const s = STEPS[step];
+  const st = stageEl();
+  st.className = "stage dir-"+dir;
+  // re-trigger animation
+  void st.offsetWidth;
+  document.querySelector(".app").classList.toggle("wide", s.kind==="showcase");
+  if(s.kind==="showcase") renderShowcase();
+  else if(s.kind==="start") renderStart();
+  else if(s.kind==="intro") renderIntro(s.sec);
+  else if(s.kind==="q") renderQ(s.q, s.sec);
+  else if(s.kind==="notes") renderNotes();
+  else renderFinish();
+  setProgress();
+  window.scrollTo({top:0});
+  setStatus("");
+  saveDraft();
+}
+
+function logoWall(ind){
+  const list=CLIENTS[ind]||[];
+  return `<div class="logo-grid">${list.map(c=>`
+    <div class="logo-card">
+      <img class="logo-ico" src="https://www.google.com/s2/favicons?domain=${c.d}&sz=64" alt="" loading="lazy" onerror="this.style.display='none'">
+      <span class="logo-name">${esc(c.n)}</span>
+    </div>`).join("")}</div>
+    <div class="sc-more">Trusted by 300+ brands — including these leaders in ${esc(ind)}.</div>`;
+}
+function renderShowcase(){
+  const inds=Object.keys(CLIENTS);
+  const sel=ANS.industry && CLIENTS[ANS.industry] ? ANS.industry : null;
+  stageEl().innerHTML = `
+   <div class="sc">
+     <div class="sc-hero">
+       <div class="si-logo"><span class="si-mark">SI</span><span class="si-word">SingleInterface</span></div>
+       <h2 class="sc-head">${esc(SI_PITCH.headline)}</h2>
+       <p class="sc-sub">${esc(SI_PITCH.sub)}</p>
+       <div class="sc-stats">${SI_PITCH.stats.map(([v,l])=>`<div class="sc-stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("")}</div>
+     </div>
+     <div class="sc-pick">
+       <div class="sc-pick-h">Show the owner leaders in their space — pick their industry</div>
+       <div class="sc-chips">${inds.map(i=>`<button class="sc-chip ${sel===i?'on':''}" data-ind="${esc(i)}">${esc(i)}</button>`).join("")}</div>
+     </div>
+     <div class="sc-wall" id="scWall">${sel?logoWall(sel):`<div class="sc-empty">Tap the owner's industry above to show the big brands who already trust SingleInterface.</div>`}</div>
+     <div class="sc-badges">${SI_PITCH.badges.map(b=>`<span>${esc(b)}</span>`).join("")}</div>
+   </div>`;
+  stageEl().querySelectorAll("[data-ind]").forEach(b=> b.onclick=()=>{
+    ANS.industry=b.dataset.ind; saveDraft();
+    stageEl().querySelectorAll(".sc-chip").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    document.getElementById("scWall").innerHTML=logoWall(b.dataset.ind);
+  });
+  navEl().innerHTML = `${step>0?'<button class="btn ghost" id="back">Back</button>':''}<button class="btn go" id="next" style="flex:1">Begin interview →</button>`;
+  bindNav();
+}
+
+function renderStart(){
+  const selHtml = SLIDE1_QS.map(q=>{
+    const cur=(ANS.answers[q.id]||[])[0]||"";
+    return `<label>${esc(q.s1label||q.q)}
+      <select class="field s1sel" data-qid="${q.id}">
+        <option value="">— select —</option>
+        ${q.opts.map(o=>`<option ${o===cur?'selected':''}>${esc(o)}</option>`).join("")}
+      </select></label>`;
+  }).join("");
+  stageEl().innerHTML = `
+    <div class="qnum"><span class="seclabel">📋 New survey</span></div>
+    <div class="qtitle">Who are you interviewing?</div>
+    <div class="qhint">Fill these in yourself from what you can see — no need to ask.</div>
+    <div class="subfields" style="padding-left:0">
+      <label>Business / shop name
+        <input type="text" class="field" id="bizName" value="${esc(ANS.businessName||'')}" placeholder="e.g. Sharma Dental Clinic" autocapitalize="words"></label>
+      <label>City <span style="color:var(--muted);font-weight:400">— type any city</span>
+        <input type="text" class="field" id="cityName" value="${esc(ANS.city||'')}" placeholder="Type any city, e.g. Pune or Indore" autocapitalize="words" list="cityList">
+        <datalist id="cityList"><option>Delhi NCR</option><option>Mumbai</option><option>Bengaluru</option><option>Hyderabad</option><option>Chennai</option><option>Pune</option><option>Kolkata</option><option>Ahmedabad</option></datalist></label>
+      <label>Owner / person's name (optional)
+        <input type="text" class="field" id="ownName" value="${esc(ANS.ownerName||'')}" placeholder="e.g. Dr. Sharma" autocapitalize="words"></label>
+      ${selHtml}
+    </div>`;
+  document.getElementById("bizName").addEventListener("input",e=>{ ANS.businessName=e.target.value; saveDraft(); });
+  document.getElementById("cityName").addEventListener("input",e=>{ ANS.city=e.target.value; saveDraft(); });
+  document.getElementById("ownName").addEventListener("input",e=>{ ANS.ownerName=e.target.value; saveDraft(); });
+  stageEl().querySelectorAll(".s1sel").forEach(sel=> sel.addEventListener("change",e=>{
+    const qid=e.target.dataset.qid, v=e.target.value;
+    if(v) ANS.answers[qid]=[v]; else delete ANS.answers[qid];
+    saveDraft();
+  }));
+  navEl().innerHTML = `${step>0?'<button class="btn ghost" id="back">Back</button>':''}<button class="btn go" id="next" style="flex:1">Continue →</button>`;
+  bindNav();
+}
+
+function renderIntro(sec){
+  stageEl().innerHTML = `<div class="intro-card">
+    <div class="intro-emoji">${sec.emoji}</div>
+    <div class="intro-letter">SECTION ${sec.letter}</div>
+    <h2>${esc(sec.title)}</h2>
+    <p>${esc(sec.blurb)}</p>
+  </div>`;
+  navEl().innerHTML = `${step>0?'<button class="btn ghost" id="back">Back</button>':''}
+    <button class="btn go" id="next">Start →</button>`;
+  bindNav();
+}
+
+function renderQ(q, sec){
+  const cur = ANS.answers[q.id] || [];
+  const isSel = o => cur.includes(o);
+  const opts = q.opts.map(o=>`
+    <button class="opt ${q.multi?'':'radio'} ${isSel(o)?'sel':''}" data-o="${esc(o)}">
+      <span class="box">${CHECK}</span><span>${esc(o)}</span></button>`).join("")
+    + (q.noOther?'':`<button class="opt other ${isSel(OTHER)?'sel':''}" data-o="${OTHER}">
+      <span class="box">${CHECK}</span><span>Other</span></button>`);
+  const otherShown = !q.noOther && isSel(OTHER);
+  let qIndex=0; for(let i=0;i<=step;i++){ if(STEPS[i].kind==="q" && qShown(STEPS[i].q)) qIndex++; }
+  stageEl().innerHTML = `
+    <div class="qnum"><span class="seclabel">${sec.emoji} ${sec.letter}</span> Question ${qIndex} of ${flowTotal()}</div>
+    <div class="qtitle">${esc(q.q)}</div>
+    ${q.hint?`<div class="qhint pill">${esc(q.hint)}</div>`:``}
+    <div class="opts">${opts}</div>
+    ${q.noOther?'':`<input type="text" class="field" id="otherText" placeholder="Type their answer" ${otherShown?'':'style="display:none"'} value="${esc(ANS.other[q.id]||'')}">`}
+    ${q.contact?`<div class="subfields" id="contact" ${isSel('Yes')?'':'style="display:none"'}>
+        <label>Name &amp; shop name (optional)<input type="text" class="field" id="cName" value="${esc(ANS.contactName)}"></label>
+        <label>Phone (optional, only with their OK)<input type="text" class="field" id="cPhone" inputmode="tel" value="${esc(ANS.contactPhone)}"></label>
+      </div>`:''}
+    ${q.noteField?`<textarea class="field" id="noteBox" placeholder="${esc(q.noteField)}" style="margin-top:12px;min-height:96px">${esc((ANS.qnotes&&ANS.qnotes[q.id])||'')}</textarea>`:''}
+  `;
+  // bind options
+  stageEl().querySelectorAll(".opt").forEach(b=>{
+    b.onclick=()=>chooseOpt(q, b.dataset.o, b);
+  });
+  const ot=document.getElementById("otherText");
+  if(ot) ot.addEventListener("input", e=>{ ANS.other[q.id]=e.target.value; saveDraft(); });
+  const cn=document.getElementById("cName"); if(cn) cn.addEventListener("input",e=>{ANS.contactName=e.target.value;saveDraft();});
+  const cp=document.getElementById("cPhone"); if(cp) cp.addEventListener("input",e=>{ANS.contactPhone=e.target.value;saveDraft();});
+  const nb=document.getElementById("noteBox"); if(nb) nb.addEventListener("input",e=>{ if(!ANS.qnotes) ANS.qnotes={}; ANS.qnotes[q.id]=e.target.value; saveDraft(); });
+
+  navEl().innerHTML = `<button class="btn ghost" id="back">Back</button>
+    <button class="btn primary" id="next">${step===STEPS.length-3?'Finish →':'Next →'}</button>`;
+  bindNav();
+}
+
+// A "none / I don't …" style answer that can't be combined with real picks.
+function isExclusiveOpt(q, o){ return (q.exclusive && q.exclusive.includes(o)) || /^(none of these|none\b|nobody\b|nothing\b)/i.test(o); }
+
+function chooseOpt(q, val, btn){
+  let cur = ANS.answers[q.id] ? [...ANS.answers[q.id]] : [];
+  if(q.multi){
+    const i=cur.indexOf(val);
+    if(i>=0){ cur.splice(i,1); }
+    else {
+      if(q.max && cur.filter(v=>v!==OTHER).length>=q.max && val!==OTHER){ setStatus(`Pick up to ${q.max} only — tap one to remove it first.`,"err"); return; }
+      if(isExclusiveOpt(q,val)){ cur=[val]; }                       // e.g. "I don't run ads" clears everything else
+      else { cur=cur.filter(v=>!isExclusiveOpt(q,v)); cur.push(val); } // any real pick clears an exclusive one
+    }
+    ANS.answers[q.id]=cur; if(!cur.length) delete ANS.answers[q.id];
+    // re-sync every option button (one tap may have deselected several)
+    stageEl().querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel", cur.includes(x.dataset.o)));
+    const ot=document.getElementById("otherText"); if(ot){ ot.style.display = cur.includes(OTHER)?'block':'none'; if(cur.includes(OTHER)) ot.focus(); }
+    saveDraft(); setProgress();
+  } else {
+    // single select
+    const already = cur.includes(val);
+    ANS.answers[q.id] = already ? [] : [val];
+    if(already) delete ANS.answers[q.id];
+    stageEl().querySelectorAll(".opt").forEach(x=>x.classList.remove("sel"));
+    if(!already) btn.classList.add("sel");
+    // other field
+    if(!q.noOther){ const ot=document.getElementById("otherText"); if(ot){ ot.style.display = (val===OTHER && !already)?'block':'none'; if(val===OTHER && !already){ ot.focus(); } } }
+    // contact field
+    if(q.contact){ const c=document.getElementById("contact"); if(c){ c.style.display = (val==='Yes' && !already)?'grid':'none'; } }
+    saveDraft(); setProgress();
+    // auto-advance (but not for Other, not when picking the contact-triggering question, not on deselect)
+    if(!already && val!==OTHER && !q.contact){ setTimeout(()=>{ if(step<STEPS.length-1){ goNext(); } }, 320); }
+  }
+}
+
+function renderNotes(){
+  stageEl().innerHTML = `
+    <div class="qnum"><span class="seclabel">✎ Notes</span></div>
+    <div class="qtitle">Anything else they said?</div>
+    <div class="qhint">Interviewer notes — optional.</div>
+    <textarea class="field" id="notes" placeholder="Jot down anything useful…">${esc(ANS.notes)}</textarea>`;
+  document.getElementById("notes").addEventListener("input", e=>{ ANS.notes=e.target.value; saveDraft(); });
+  navEl().innerHTML = `<button class="btn ghost" id="back">Back</button>
+    <button class="btn primary" id="next">Review &amp; save →</button>`;
+  bindNav();
+}
+
+function renderFinish(){
+  const answered = answeredCount();
+  stageEl().innerHTML = `<div class="finish">
+    <div class="big">🎉</div>
+    <h2>That's a wrap!</h2>
+    ${ANS.businessName?`<div class="count" style="color:var(--teal);font-weight:700">${esc(ANS.businessName)}</div>`:""}
+    <div class="count">${answered} of ${flowTotal()} questions answered</div>
+    <p style="color:var(--muted);max-width:40ch;margin:0">Save this response to the shared database, then start the next seller.</p>
+  </div>`;
+  navEl().innerHTML = `<button class="btn ghost" id="back">Back</button>
+    <button class="btn go" id="save">💾 Save response</button>`;
+  document.getElementById("back").onclick=goBack;
+  document.getElementById("save").onclick=saveResponse;
+}
+
+function bindNav(){
+  const b=document.getElementById("back"); if(b) b.onclick=goBack;
+  const nx=document.getElementById("next"); if(nx) nx.onclick=goNext;
+}
+
+/* jump-to section / question drawer */
+function openJump(){
+  const panel=document.getElementById("jump");
+  const notesIdx=STEPS.findIndex(s=>s.kind==="notes");
+  let html=`<div class="jump-head"><b>Jump to</b><button id="jumpX" aria-label="Close">✕</button></div>`;
+  const startIdx=STEPS.findIndex(s=>s.kind==="start");
+  const scIdx=STEPS.findIndex(s=>s.kind==="showcase");
+  html+=`<button class="jump-row ${STEPS[step].kind==='start'?'cur':''}" data-step="${startIdx}">📋 Interviewee details</button>`;
+  html+=`<button class="jump-row ${STEPS[step].kind==='showcase'?'cur':''}" data-step="${scIdx}">⭐ Who we are (show owner)</button>`;
+  SECTIONS.forEach(sec=>{
+    const vqs=sec.qs.filter(q=>!q.onSlide1 && qShown(q));
+    if(!vqs.length) return;   // no applicable questions in this section right now
+    const secIdx=STEPS.findIndex(s=>s.kind==='intro'&&s.sec===sec);
+    html+=`<button class="jump-sec" data-step="${secIdx}">${sec.emoji} Section ${sec.letter} · ${esc(sec.title)}</button>`;
+    vqs.forEach(q=>{
+      const qIdx=STEPS.findIndex(s=>s.kind==='q'&&s.q===q);
+      const done=ANS.answers[q.id]&&ANS.answers[q.id].length;
+      html+=`<button class="jump-q ${step===qIdx?'cur':''}" data-step="${qIdx}"><span class="j-ck">${done?'✓':''}</span><span>${esc(q.q)}</span></button>`;
+    });
+  });
+  html+=`<button class="jump-row ${STEPS[step].kind==='notes'?'cur':''}" data-step="${notesIdx}">✎ Notes</button>`;
+  html+=`<button class="jump-row ${STEPS[step].kind==='finish'?'cur':''}" data-step="${STEPS.length-1}">🎉 Finish &amp; save</button>`;
+  panel.innerHTML=html;
+  panel.querySelectorAll("[data-step]").forEach(b=> b.onclick=()=>{ const t=+b.dataset.step; dir = t>=step?"next":"prev"; step=t; render(); closeJump(); });
+  document.getElementById("jumpX").onclick=closeJump;
+  const bd=document.getElementById("jumpBack"); bd.hidden=false; bd.onclick=closeJump;
+  requestAnimationFrame(()=>{ bd.classList.add("open"); panel.classList.add("open"); });
+}
+function closeJump(){
+  const bd=document.getElementById("jumpBack"), panel=document.getElementById("jump");
+  bd.classList.remove("open"); panel.classList.remove("open");
+  setTimeout(()=>{ bd.hidden=true; }, 220);
+}
+document.getElementById("openJump").onclick=openJump;
+function goNext(){ let i=step+1; while(i<STEPS.length && !stepVisible(i)) i++; if(i<STEPS.length){ dir="next"; step=i; render(); } }
+function goBack(){ let i=step-1; while(i>0 && !stepVisible(i)) i--; if(i>=0){ dir="prev"; step=i; render(); } }
+
+function setStatus(msg,cls){ const s=document.getElementById("status"); if(s){ s.textContent=msg||""; s.className="status "+(cls||""); } }
+
+/* confetti burst */
+function confetti(){
+  const colors=['#0f6b5c','#d99312','#4fb9a3','#f0b43c','#1d7a4c'];
+  for(let i=0;i<90;i++){
+    const d=document.createElement('i'); d.className='confetti';
+    d.style.left=(Math.random()*100)+'vw';
+    d.style.background=colors[i%colors.length];
+    d.style.animation=`fall ${1.8+Math.random()*1.2}s cubic-bezier(.3,.6,.5,1) ${Math.random()*0.4}s forwards`;
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),3400);
+  }
+}
+
+async function saveResponse(){
+  QS.forEach(q=>{ if(q.cond && !qShown(q)){ delete ANS.answers[q.id]; delete ANS.other[q.id]; } });  // drop answers that became irrelevant
+  const data = { answers:ANS.answers, other:ANS.other, qnotes:ANS.qnotes||{}, industry:(ANS.industry||""),
+    business:(ANS.businessName||"").slice(0,160), city:(ANS.city||"").slice(0,80), owner:(ANS.ownerName||"").slice(0,120),
+    contactName:(ANS.contactName||"").slice(0,120), contactPhone:(ANS.contactPhone||"").slice(0,30), notes:(ANS.notes||"").slice(0,2000) };
+  if(!Object.keys(data.answers).length){ setStatus("Answer at least one question before saving.","err"); return; }
+  if(!configured()){ setStatus("Not connected — add Supabase keys in CONFIG to save to the shared database.","err"); return; }
+  const btn=document.getElementById("save"); btn.disabled=true; setStatus("Saving…");
+  const row={ surveyor:SURVEYOR, device:deviceId(), client_time:new Date().toISOString(), payload:data };
+  const q=getQueue(); q.push(row); setQueue(q);   // queue first → never lose a response
+  await flushQueue();
+  confetti();
+  const synced = online() && getQueue().length===0;
+  // reset for next seller
+  ANS = {...BLANK_ANS};
+  step=0; try{localStorage.removeItem(DKEY)}catch(e){}
+  dir="next"; render();
+  setStatus(synced ? "✅ Saved to shared database. Ready for the next seller!" : "✅ Saved on this device — will sync when back online.","ok");
+  btn.disabled=false;
+}
+
+/* =====================================================================
+   Results + CSV (reads shared DB + this device's pending)
+   ===================================================================== */
+function rebuildResp(remoteRows){
+  const map=r=>({ at:r.created_at||r.client_time, surveyor:r.surveyor, _synced:!!r.created_at,
+    industry:r.payload?.industry||"", business:r.payload?.business||"", city:r.payload?.city||"", owner:r.payload?.owner||"",
+    answers:r.payload?.answers||{}, other:r.payload?.other||{}, qnotes:r.payload?.qnotes||{},
+    contactName:r.payload?.contactName||"", contactPhone:r.payload?.contactPhone||"", notes:r.payload?.notes||"" });
+  RESP=[...getQueue().map(map), ...(remoteRows||[]).map(map)];
+  renderResults();
+}
+async function loadRemote(){
+  await flushQueue();
+  if(!online()){ rebuildResp([]); return; }
+  try{ const {data}=await sb.from("responses").select("*").order("created_at",{ascending:false}).limit(2000); rebuildResp(data||[]); }
+  catch(e){ rebuildResp([]); }
+}
+function pct(num,den){ return den? Math.round(100*num/den)+"%" : "–"; }
+function share(id,test){ const rows=RESP.filter(r=>r.answers?.[id]?.length); const hit=rows.filter(r=>r.answers[id].some(test)).length; return {v:pct(hit,rows.length), b:`${hit} of ${rows.length}`}; }
+function renderResults(){
+  const c=document.getElementById("count"); if(c) c.textContent=RESP.length;
+  const el=document.getElementById("results"); if(!el) return;
+  if(!configured()){ el.innerHTML=`<div class="empty"><strong>Not connected to the shared database</strong><span>Add your Supabase URL + anon key in <code>CONFIG</code> to see everyone's responses here.</span></div>`; return; }
+  if(!RESP.length){ el.innerHTML=`<div class="empty"><strong>No responses yet</strong><span>Responses from all tablets appear here as a live tally, with headline signals on whether an SMB product makes sense.</span></div>`; return; }
+  const sigs=[
+    ["First-generation founders", share("generation", v=>v.startsWith("First generation"))],
+    ["Use an agency or freelancer", share("who", v=>v==="A local agency"||v==="A freelancer")],
+    ["Unhappy with current setup", share("sat", v=>v==="Very unhappy"||v==="Unhappy")],
+    ["New customers dropping off", share("customer_trend", v=>v==="Slowly dropping"||v==="Dropping fast")],
+    ["Can't be found on Google", share("found_online", v=>["I don't show up at all","Wrong or old information shows","I've never checked"].includes(v))],
+    ["Competitors outrank them in search", share("competitor_check", v=>["A competitor is above me","Only competitors — I'm not there"].includes(v))],
+    ["Enquiries slip away", share("enquiry_slip", v=>v==="Many just slip through"||v==="We lose them")],
+    ["Misses 6+ calls a day", share("missed_calls", v=>v==="6–15"||v==="More than 15")],
+    ["Doesn't know what customers search", share("search_terms", v=>v.startsWith("No"))],
+    ["Online presence looks weak", share("presence_problems", v=>v==="My page looks empty or outdated"||v==="No recent photos or posts")],
+    ["Worried about / ignores reviews", share("reviews_feeling", v=>v==="Worried about them"||v==="I never look"||v==="I don't get many")],
+    ["Rarely posts anything", share("post_frequency", v=>v==="Rarely or never"||v==="Once in a while")],
+    ["No one makes their content", share("creatives", v=>v==="We rarely make any"||v==="We don't post at all")],
+    ["Blocked on content (time/ideas/help)", share("creative_blocker", v=>v==="No time to make them"||v==="Don't know what to post"||v==="No one to design / edit"||v==="Run out of ideas")],
+    ["Owner does everything alone", share("who_does_digital", v=>v==="I do it all myself")],
+    ["Owner spends 1hr+/day on this", share("owner_time", v=>v==="1–2 hours"||v==="More than 2 hours")],
+    ["Can't tell what brings customers", share("attribution", v=>v.startsWith("No"))],
+    ["Thinks a WhatsApp assistant would fix it", share("solution_belief", v=>v.includes("WhatsApp assistant"))],
+    ["Thinks a voice bot would fix it", share("solution_belief", v=>v.includes("voice bot"))],
+    ["Thinks paid ads would fix it", share("solution_belief", v=>v.includes("Paid ads")||v.startsWith("Ads on"))],
+    ["Wants a human to deal with", share("comm_mode", v=>v==="A real human")],
+    ["Open to WhatsApp support", share("comm_mode", v=>v==="On WhatsApp")],
+  ];
+  let html=`<div class="signals">${sigs.map(([l,s])=>`<div class="sig"><span class="v">${s.v}</span><span class="l">${l}</span><span class="b">${s.b}</span></div>`).join("")}</div>`;
+  let k=0;
+  QS.forEach(q=>{ k++;
+    const rows=RESP.filter(r=>r.answers?.[q.id]?.length);
+    const counts=q.opts.map(o=>rows.filter(r=>r.answers[q.id].includes(o)).length);
+    const oc=rows.filter(r=>r.answers[q.id].includes(OTHER)).length;
+    const labels=[...q.opts]; if(!q.noOther){ labels.push("Other"); counts.push(oc); }
+    const max=Math.max(1,...counts);
+    const others=RESP.map(r=>r.other?.[q.id]).filter(Boolean);
+    html+=`<div class="rq"><h3>${String(k).padStart(2,"0")} · ${esc(q.q)}</h3><div class="sub">${rows.length} answered${q.multi?" · multiple picks allowed":""}</div>
+      ${labels.map((l,i)=>`<div class="bar"><div class="track"><div class="fill" style="width:${100*counts[i]/max}%"></div><div class="lbl">${esc(l)}</div></div><div class="ct">${counts[i]} · ${pct(counts[i],rows.length)}</div></div>`).join("")}
+      ${others.length?`<div class="others">${others.map(o=>`<span>“${esc(o)}”</span>`).join("")}</div>`:""}</div>`;
+  });
+  el.innerHTML=html;
+}
+document.getElementById("refresh").onclick=async()=>{ const es=document.getElementById("exportStatus"); es.textContent="Refreshing…"; await loadRemote(); es.textContent=""; };
+document.getElementById("export").onclick=()=>{
+  const es=document.getElementById("exportStatus");
+  if(!RESP.length){ es.textContent="No responses to download yet."; return; }
+  const noteQs=QS.filter(q=>q.noteField);
+  const head=["Saved at","Surveyor","Industry","Business","City","Owner",...QS.map(q=>q.q),...noteQs.map(q=>q.q+" — note"),"Notes"];
+  const cell=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[head.map(cell).join(",")].concat(RESP.map(r=>[r.at,r.surveyor,r.industry,r.business,r.city,r.owner,
+    ...QS.map(q=>(r.answers?.[q.id]||[]).map(v=>v===OTHER?`Other: ${r.other?.[q.id]||""}`:v).join("; ")),
+    ...noteQs.map(q=>r.qnotes?.[q.id]||""),
+    r.notes].map(cell).join(",")));
+  const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`metro-seller-survey-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  es.textContent=`${RESP.length} responses exported.`;
+};
+
+/* =====================================================================
+   Tabs + surveyor gate + boot
+   ===================================================================== */
+const tabs={fill:document.getElementById("tab-fill"),results:document.getElementById("tab-results")};
+function show(which){
+  tabs.fill.setAttribute("aria-selected", which==="fill"); tabs.results.setAttribute("aria-selected", which==="results");
+  document.getElementById("view-fill").hidden = which!=="fill";
+  document.getElementById("view-results").hidden = which!=="results";
+  if(which==="results") loadRemote();
+}
+tabs.fill.onclick=()=>show("fill"); tabs.results.onclick=()=>show("results");
+
+function showApp(){
+  document.getElementById("gate").hidden=true;
+  document.getElementById("chrome").hidden=false;
+  document.getElementById("tabs").hidden=false;
+  document.getElementById("whoName").textContent=SURVEYOR;
+  show("fill"); render();
+  if(!window._jumpShown){ window._jumpShown=true; setTimeout(openJump, 350); }  // drawer open by default; closable
+}
+function renderGate(){
+  const warn=document.getElementById("setupWarn");
+  const dismissed = localStorage.getItem("setup-dismissed")==="1";
+  warn.innerHTML = (configured()||dismissed) ? "" :
+    `<div class="setup"><button class="setup-x" id="setupX" aria-label="Dismiss">×</button><b>One-time setup:</b> add your Supabase URL + anon key in the <code>CONFIG</code> block so all tablets save to one shared database. Until then, responses stay on this device. Steps are in <code>README.md</code>.</div>`;
+  const sx=document.getElementById("setupX");
+  if(sx) sx.onclick=()=>{ localStorage.setItem("setup-dismissed","1"); warn.innerHTML=""; };
+
+  const list=document.getElementById("whoList");
+  const prev = localStorage.getItem(WHOKEY)||"";
+  const chips = (CONFIG.TEAM||[]).filter(Boolean);
+  list.innerHTML = `
+    <input type="text" class="field" id="nameInput" placeholder="Type your name" value="${esc(prev)}" autocomplete="name" autocapitalize="words">
+    <button class="btn go" id="nameGo" style="width:100%">Continue →</button>
+    ${chips.length?`<div class="namechips" style="margin-top:4px">${chips.map(nm=>`<button class="namechip" data-nm="${esc(nm)}">${esc(nm)}</button>`).join("")}</div>`:""}`;
+  const go=()=>{
+    const v=(document.getElementById("nameInput").value||"").trim().slice(0,60);
+    if(!v){ setStatus("",""); document.getElementById("nameInput").focus(); document.getElementById("nameInput").style.borderColor="var(--bad)"; return; }
+    SURVEYOR=v; localStorage.setItem(WHOKEY,v); showApp();
+  };
+  document.getElementById("nameGo").onclick=go;
+  const inp=document.getElementById("nameInput");
+  inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+  inp.addEventListener("input",()=>{ inp.style.borderColor=""; });
+  list.querySelectorAll("[data-nm]").forEach(b=> b.onclick=()=>{ inp.value=b.dataset.nm; go(); });
+
+  document.getElementById("gate").hidden=false;
+  document.getElementById("chrome").hidden=true;
+  document.getElementById("tabs").hidden=true;
+  document.getElementById("view-fill").hidden=true;
+  document.getElementById("view-results").hidden=true;
+}
+document.getElementById("switchWho").onclick=renderGate;
+document.getElementById("toResultsFromGate").onclick=()=>{ /* allow peeking results from gate */
+  SURVEYOR=SURVEYOR||"(not signed in)"; document.getElementById("gate").hidden=true;
+  document.getElementById("chrome").hidden=false; document.getElementById("tabs").hidden=false;
+  document.getElementById("whoName").textContent=SURVEYOR; show("results");
+};
+
+(function boot(){
+  if(configured() && window.supabase){ sb=window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
+  try{ const d=JSON.parse(localStorage.getItem(DKEY)||"null"); if(d && d.ANS){ ANS=Object.assign({...BLANK_ANS}, d.ANS); step=Math.min(d.step||0, STEPS.length-1); } }catch(e){}
+  renderNet(); renderResults();
+  window.addEventListener("online", flushQueue);
+  window.addEventListener("offline", renderNet);
+  setInterval(flushQueue, 20000);
+  SURVEYOR=localStorage.getItem(WHOKEY);
+  if(SURVEYOR) showApp(); else renderGate();   // remembered after first entry; "switch" re-opens the gate
+})();
+</script>
+</body>
+</html>
