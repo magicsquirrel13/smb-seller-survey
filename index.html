@@ -164,6 +164,8 @@ textarea.field{min-height:120px;resize:vertical}
 .empty strong{color:var(--ink);font-size:16px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
 .btn.sm{font-size:14px;padding:10px 16px;flex:0 0 auto}
+.btn.danger{color:var(--bad);border-color:#e7b7ad}
+.btn.danger:hover{background:#fdeeea}
 
 /* confetti */
 .confetti{position:fixed;top:-12px;width:9px;height:15px;border-radius:2px;z-index:60;pointer-events:none}
@@ -277,6 +279,7 @@ textarea.field{min-height:120px;resize:vertical}
     <div class="toolbar">
       <button class="btn ghost sm" type="button" id="refresh">↻ Refresh</button>
       <button class="btn primary sm" type="button" id="export">⬇ Download CSV</button>
+      <button class="btn ghost sm danger" type="button" id="clearAll">🗑 Clear all</button>
       <span class="status" id="exportStatus" style="text-align:left"></span>
     </div>
     <div id="results"></div>
@@ -291,7 +294,8 @@ textarea.field{min-height:120px;resize:vertical}
 const CONFIG = {
   SUPABASE_URL: "https://psybsqqkvmltaqzoczwd.supabase.co",
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeWJzcXFrdm1sdGFxem9jendkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDM5NzgsImV4cCI6MjEwODU3OTk3OH0.Qn3jBB7IghITsvRhEESvbySd-7E6RlCCFd8QOWBgv8k",
-  TEAM: ["Nishtha","Surveyor 2","Surveyor 3","Surveyor 4","Surveyor 5"]
+  TEAM: ["Nishtha","Surveyor 2","Surveyor 3","Surveyor 4","Surveyor 5"],
+  CLEAR_PIN: "1309"   // PIN to wipe all responses from the Results tab
 };
 
 const OTHER = "__other";
@@ -908,6 +912,22 @@ document.getElementById("export").onclick=()=>{
   a.download=`metro-seller-survey-${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   es.textContent=`${RESP.length} responses exported.`;
+};
+document.getElementById("clearAll").onclick=async()=>{
+  const es=document.getElementById("exportStatus");
+  if(!sb){ es.textContent="Not connected to the database — can't clear."; return; }
+  const pin=prompt("Enter PIN to permanently clear ALL responses:");
+  if(pin===null) return;                                   // cancelled
+  if(pin!==CONFIG.CLEAR_PIN){ es.textContent="Wrong PIN — nothing was deleted."; return; }
+  if(!confirm(`This permanently deletes ALL ${RESP.length} responses for everyone, and cannot be undone.\n\nTip: Download CSV first if you want a backup.\n\nContinue?`)) return;
+  es.textContent="Clearing…";
+  try{
+    const { error } = await sb.from("responses").delete().not("id","is",null);  // matches every row
+    if(error) throw error;
+    setQueue([]);                                          // also drop any unsynced local queue
+    await loadRemote();                                    // refresh Results (now empty)
+    es.textContent="✓ All responses cleared.";
+  }catch(e){ es.textContent="Couldn't clear: "+(e.message||e)+" — did you add the delete policy in Supabase?"; }
 };
 
 /* =====================================================================
