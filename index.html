@@ -294,7 +294,7 @@ textarea.field{min-height:120px;resize:vertical}
 const CONFIG = {
   SUPABASE_URL: "https://psybsqqkvmltaqzoczwd.supabase.co",
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeWJzcXFrdm1sdGFxem9jendkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDM5NzgsImV4cCI6MjEwODU3OTk3OH0.Qn3jBB7IghITsvRhEESvbySd-7E6RlCCFd8QOWBgv8k",
-  TEAM: ["Nishtha","Surveyor 2","Surveyor 3","Surveyor 4","Surveyor 5"],
+  TEAM: [],           // not used — each surveyor just types their own name on the sign-in screen
   CLEAR_PIN: "1309"   // PIN to wipe all responses from the Results tab
 };
 
@@ -329,15 +329,17 @@ const SECTIONS = [
   {id:"sales", q:"Rough monthly sales (all outlets)", opts:["Under ₹5 lakh","₹5–20 lakh","₹20 lakh – ₹1 crore","Above ₹1 crore","Prefer not to say"], noOther:true},
  ]},
  { letter:"C", title:"How you get customers today", emoji:"🧲", blurb:"Where business comes from right now.", qs:[
-  {id:"sources", q:"Where do most of your new customers come from?", hint:"Pick all that apply", multi:true, groups:[
-    {label:"Organic — free / unpaid", tone:"organic", opts:["Walk-ins / passing by","Word of mouth / referrals","Google — Search / Maps (organic)","Facebook page (organic)","Instagram (organic)","WhatsApp (organic)","Justdial / Practo / Zomato / other apps","Pamphlets / newspaper / hoardings"]},
-    {label:"Ads — paid", tone:"paid", opts:["Google Ads","Facebook ads","Instagram ads","WhatsApp ads"]}
-  ]},
   {id:"presence", q:"Which of these do you have for your business?", hint:"Pick all that apply", multi:true, opts:["A page on Google / Google Maps","A website","Instagram page","Facebook page","WhatsApp Business","None of these"]},
+  {id:"sources", q:"Where do most of your new customers come from?", hint:"Pick all that apply", multi:true,
+    needsFrom:"presence", needs:{"Google — Search / Maps (organic)":"A page on Google / Google Maps","Facebook page (organic)":"Facebook page","Instagram (organic)":"Instagram page","WhatsApp (organic)":"WhatsApp Business","Facebook ads":"Facebook page","Instagram ads":"Instagram page","WhatsApp ads":"WhatsApp Business"},
+    groups:[
+    {label:"Organic — free / unpaid", tone:"organic", opts:["Walk-ins / passing by","Word of mouth / referrals","Google — Search / Maps (organic)","Facebook page (organic)","Instagram (organic)","WhatsApp (organic)","Justdial / Practo / Zomato / other apps","Pamphlets / newspaper / hoardings"]},
+    {label:"Ads — paid", tone:"paid", opts:["Google Ads","Facebook ads","Instagram ads","WhatsApp ads","Influencer marketing"]}
+  ]},
  ]},
  { letter:"D", title:"Your digital marketing", emoji:"📣", blurb:"Agencies, ads, and what you spend.", qs:[
   {id:"who", q:"Who runs your digital marketing?", opts:["A local agency","A freelancer","My own staff","I do it myself","A family member","Nobody right now"]},
-  {id:"platforms", q:"Where do you run ads?", hint:"Pick all that apply", multi:true, exclusive:["I don't run ads"], opts:["Google Ads (Search / Maps)","Meta ads (Facebook)","Instagram ads","WhatsApp ads","YouTube ads","Justdial / Practo / other apps","I don't run ads"], cond:COND.doesMarketing},
+  {id:"platforms", q:"Where do you run ads?", hint:"Pick all that apply", multi:true, exclusive:["I don't run ads"], opts:["Google Ads (Search / Maps)","Meta ads (Facebook)","Instagram ads","WhatsApp ads","YouTube ads","Influencer marketing","Justdial / Practo / other apps","I don't run ads"], cond:COND.doesMarketing},
   {id:"fee", q:"How much do you pay the agency / freelancer per month? (fee only, not ad money)", opts:["Nothing / don't use one","Under ₹5,000","₹5,000–15,000","₹15,000–30,000","₹30,000–50,000","Above ₹50,000"], cond:COND.usesAgency},
   {id:"adspend_google", q:"How much do you spend on Google Ads per month? (media spend paid to Google)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsGoogleAds},
   {id:"adspend_meta", q:"How much do you spend on Facebook ads per month? (media spend paid to Meta)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsMetaAds},
@@ -368,10 +370,10 @@ const SECTIONS = [
   {id:"attribution", q:"Can you see which ad or platform actually brought you each customer?", opts:["Yes — clearly","Roughly","No — I can't really tell"], noOther:true},
  ]},
  { letter:"H", title:"What they think would fix it", emoji:"💡", blurb:"Their own view — not a pitch.", qs:[
-  {id:"solution_belief", q:"In your own view, what would actually fix this for your business?", hint:"Pick all that apply", multi:true, exclusive:["Nothing really needs fixing"], opts:["Better organic / free visibility (Google, Maps, SEO)","Paid ads (Google Ads)","Ads on Meta (Facebook)","Ads on Instagram","Ads on WhatsApp","A voice bot that handles calls","A WhatsApp assistant that handles chats","Nothing really needs fixing"]},
+  {id:"solution_belief", q:"In your own view, what would actually fix this for your business?", hint:"Pick all that apply", multi:true, exclusive:["Nothing really needs fixing"], opts:["Better organic / free visibility (Google, Maps, SEO)","Paid ads (Google Ads)","Ads on Meta (Facebook)","Ads on Instagram","Ads on WhatsApp","Influencer marketing","A voice bot that handles calls","A WhatsApp assistant that handles chats","Nothing really needs fixing"]},
   {id:"comm_mode", q:"If you had help for all this, how would you want to reach them?", hint:"Pick all that apply", multi:true, opts:["A real human","On WhatsApp","Raise a ticket"]},
-  {id:"willing_pay", q:"If a service took care of all of this for you, what would you pay for it each month?", opts:["Nothing","Under ₹1,000","₹1,000–3,000","₹3,000–5,000","₹5,000–7,000","₹7,000–10,000","Above ₹10,000"], noOther:true},
-  {id:"one_handoff", q:"Last one — if you could get just ONE of these fixed for you tomorrow, which would you pick first?", opts:["Replying to customer messages","Answering & returning calls","Keeping my Google listing fresh","Getting & replying to reviews","Posting on Facebook / Instagram","Running my ads","I'd rather keep doing it all myself"]},
+  {id:"one_handoff", q:"Of everything we discussed, which ONE would you most want fixed first?", opts:["Replying to customer messages","Answering & returning calls","Keeping my Google listing fresh","Getting & replying to reviews","Posting on Facebook / Instagram","Running my ads","Influencer / creator promotions","I'd rather keep doing it all myself"]},
+  {id:"willing_pay", q:"Last one — if a service took care of all of this for you, what would you pay for it each month?", opts:["Nothing","Under ₹1,000","₹1,000–3,000","₹3,000–5,000","₹5,000–7,000","₹7,000–10,000","Above ₹10,000"], noOther:true},
  ]},
 ];
 const QS = SECTIONS.flatMap(s=>s.qs);
@@ -432,8 +434,8 @@ const HI = {
   attribution:{q:"Aap dekh paate hain ki kaunsa ad ya platform har customer laaya?", o:{"Yes — clearly":"Haan — saaf","Roughly":"Lagbhag","No — I can't really tell":"Nahi — pata nahi chalta"}},
   solution_belief:{q:"Aapke hisaab se, aapke business ke liye asal mein kya cheez theek karegi?", hint:"Jo bhi lagu ho, sab chunein", o:{"Better organic / free visibility (Google, Maps, SEO)":"Behtar organic / free visibility (Google, Maps, SEO)","Ads on Meta (Facebook)":"Meta (Facebook) par ads","Ads on Instagram":"Instagram par ads","Ads on WhatsApp":"WhatsApp par ads","A voice bot that handles calls":"Ek voice bot jo call sambhaale","A WhatsApp assistant that handles chats":"Ek WhatsApp assistant jo chat sambhaale","Nothing really needs fixing":"Kuch theek karne ki zaroorat nahi"}},
   comm_mode:{q:"Agar iske liye help mile, toh aap unse kaise judna chahenge?", hint:"Jo bhi lagu ho, sab chunein", o:{"A real human":"Ek asli insaan","On WhatsApp":"WhatsApp par","Raise a ticket":"Ticket raise karein"}},
-  willing_pay:{q:"Agar ek service yeh sab aapke liye sambhaale, toh mahine ka kitna dena chahenge?", o:{"Nothing":"Kuch nahi","Under ₹1,000":"₹1,000 se kam","Above ₹10,000":"₹10,000 se zyada"}},
-  one_handoff:{q:"Aakhri — agar kal inme se SIRF EK cheez theek ho jaaye, toh pehle kaunsi chunenge?", o:{"Replying to customer messages":"Customer messages ka reply","Answering & returning calls":"Call uthana aur wapas karna","Keeping my Google listing fresh":"Google listing fresh rakhna","Getting & replying to reviews":"Reviews laana aur reply karna","Posting on Facebook / Instagram":"Facebook / Instagram par post karna","Running my ads":"Apne ads chalana","I'd rather keep doing it all myself":"Main khud hi karta rahoon"}}
+  willing_pay:{q:"Aakhri — agar ek service yeh sab aapke liye sambhaale, toh mahine ka kitna dena chahenge?", o:{"Nothing":"Kuch nahi","Under ₹1,000":"₹1,000 se kam","Above ₹10,000":"₹10,000 se zyada"}},
+  one_handoff:{q:"In sab mein se, SIRF EK cheez jo aap sabse pehle theek karwana chahenge?", o:{"Replying to customer messages":"Customer messages ka reply","Answering & returning calls":"Call uthana aur wapas karna","Keeping my Google listing fresh":"Google listing fresh rakhna","Getting & replying to reviews":"Reviews laana aur reply karna","Posting on Facebook / Instagram":"Facebook / Instagram par post karna","Running my ads":"Apne ads chalana","Influencer / creator promotions":"Influencer / creator promotion","I'd rather keep doing it all myself":"Main khud hi karta rahoon"}}
 };
 function tQ(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].q) || q.q; }
 function tHint(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].hint) || q.hint || ""; }
@@ -657,9 +659,10 @@ function renderQ(q, sec){
   const isSel = o => cur.includes(o);
   const optBtn = o=>`<button class="opt ${q.multi?'':'radio'} ${isSel(o)?'sel':''}" data-o="${esc(o)}">
       <span class="box">${CHECK}</span><span>${esc(tO(q,o))}</span></button>`;
+  const vis = o=>!optHidden(q,o);
   const opts = (q.groups
-      ? q.groups.map(g=>`<div class="optgroup"><div class="optgroup-h ${g.tone||''}">${esc(tGroup(g.label))}</div>${g.opts.map(optBtn).join("")}</div>`).join("")
-      : q.opts.map(optBtn).join(""))
+      ? q.groups.map(g=>{ const os=g.opts.filter(vis); return os.length?`<div class="optgroup"><div class="optgroup-h ${g.tone||''}">${esc(tGroup(g.label))}</div>${os.map(optBtn).join("")}</div>`:""; }).join("")
+      : q.opts.filter(vis).map(optBtn).join(""))
     + (q.noOther?'':`<button class="opt other ${isSel(OTHER)?'sel':''}" data-o="${OTHER}">
       <span class="box">${CHECK}</span><span>${tUI('Anya','Other')}</span></button>`);
   const otherShown = !q.noOther && isSel(OTHER);
@@ -693,6 +696,14 @@ function renderQ(q, sec){
 
 // A "none / I don't …" style answer that can't be combined with real picks.
 function isExclusiveOpt(q, o){ return (q.exclusive && q.exclusive.includes(o)) || /^(none of these|none\b|nobody\b|nothing\b)/i.test(o); }
+// hide an option when it depends on something the respondent said they don't have (q.needs → q.needsFrom answers)
+function optHidden(q, o){
+  const need = q.needs && q.needs[o];
+  if(!need) return false;
+  const have = ANS.answers[q.needsFrom] || [];
+  if(!have.length) return false;                 // the earlier question isn't answered yet → show everything
+  return !have.includes(need);
+}
 
 function chooseOpt(q, val, btn){
   let cur = ANS.answers[q.id] ? [...ANS.answers[q.id]] : [];
@@ -959,12 +970,9 @@ function renderGate(){
   if(sx) sx.onclick=()=>{ localStorage.setItem("setup-dismissed","1"); warn.innerHTML=""; };
 
   const list=document.getElementById("whoList");
-  const prev = localStorage.getItem(WHOKEY)||"";
-  const chips = (CONFIG.TEAM||[]).filter(Boolean);
   list.innerHTML = `
-    <input type="text" class="field" id="nameInput" placeholder="Type your name" value="${esc(prev)}" autocomplete="name" autocapitalize="words">
-    <button class="btn go" id="nameGo" style="width:100%">Continue →</button>
-    ${chips.length?`<div class="namechips" style="margin-top:4px">${chips.map(nm=>`<button class="namechip" data-nm="${esc(nm)}">${esc(nm)}</button>`).join("")}</div>`:""}`;
+    <input type="text" class="field" id="nameInput" placeholder="Enter your name (who is taking the interview)" value="" autocomplete="name" autocapitalize="words">
+    <button class="btn go" id="nameGo" style="width:100%">Continue →</button>`;
   const go=()=>{
     const v=(document.getElementById("nameInput").value||"").trim().slice(0,60);
     if(!v){ setStatus("",""); document.getElementById("nameInput").focus(); document.getElementById("nameInput").style.borderColor="var(--bad)"; return; }
@@ -974,7 +982,6 @@ function renderGate(){
   const inp=document.getElementById("nameInput");
   inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
   inp.addEventListener("input",()=>{ inp.style.borderColor=""; });
-  list.querySelectorAll("[data-nm]").forEach(b=> b.onclick=()=>{ inp.value=b.dataset.nm; go(); });
 
   document.getElementById("gate").hidden=false;
   document.getElementById("chrome").hidden=true;
