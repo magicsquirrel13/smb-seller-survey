@@ -366,6 +366,7 @@ const SECTIONS = [
  { letter:"H", title:"What they think would fix it", emoji:"💡", blurb:"Their own view — not a pitch.", qs:[
   {id:"solution_belief", q:"In your own view, what would actually fix this for your business?", hint:"Pick all that apply", multi:true, exclusive:["Nothing really needs fixing"], opts:["Better organic / free visibility (Google, Maps, SEO)","Paid ads (Google Ads)","Ads on Meta (Facebook)","Ads on Instagram","Ads on WhatsApp","A voice bot that handles calls","A WhatsApp assistant that handles chats","Nothing really needs fixing"]},
   {id:"comm_mode", q:"If you had help for all this, how would you want to reach them?", hint:"Pick all that apply", multi:true, opts:["A real human","On WhatsApp","Raise a ticket"]},
+  {id:"willing_pay", q:"If a service took care of all of this for you, what would you pay for it each month?", opts:["Nothing","Under ₹1,000","₹1,000–3,000","₹3,000–5,000","₹5,000–7,000","₹7,000–10,000","Above ₹10,000"], noOther:true},
   {id:"one_handoff", q:"Last one — if you could get just ONE of these fixed for you tomorrow, which would you pick first?", opts:["Replying to customer messages","Answering & returning calls","Keeping my Google listing fresh","Getting & replying to reviews","Posting on Facebook / Instagram","Running my ads","I'd rather keep doing it all myself"]},
  ]},
 ];
@@ -427,6 +428,7 @@ const HI = {
   attribution:{q:"Aap dekh paate hain ki kaunsa ad ya platform har customer laaya?", o:{"Yes — clearly":"Haan — saaf","Roughly":"Lagbhag","No — I can't really tell":"Nahi — pata nahi chalta"}},
   solution_belief:{q:"Aapke hisaab se, aapke business ke liye asal mein kya cheez theek karegi?", hint:"Jo bhi lagu ho, sab chunein", o:{"Better organic / free visibility (Google, Maps, SEO)":"Behtar organic / free visibility (Google, Maps, SEO)","Ads on Meta (Facebook)":"Meta (Facebook) par ads","Ads on Instagram":"Instagram par ads","Ads on WhatsApp":"WhatsApp par ads","A voice bot that handles calls":"Ek voice bot jo call sambhaale","A WhatsApp assistant that handles chats":"Ek WhatsApp assistant jo chat sambhaale","Nothing really needs fixing":"Kuch theek karne ki zaroorat nahi"}},
   comm_mode:{q:"Agar iske liye help mile, toh aap unse kaise judna chahenge?", hint:"Jo bhi lagu ho, sab chunein", o:{"A real human":"Ek asli insaan","On WhatsApp":"WhatsApp par","Raise a ticket":"Ticket raise karein"}},
+  willing_pay:{q:"Agar ek service yeh sab aapke liye sambhaale, toh mahine ka kitna dena chahenge?", o:{"Nothing":"Kuch nahi","Under ₹1,000":"₹1,000 se kam","Above ₹10,000":"₹10,000 se zyada"}},
   one_handoff:{q:"Aakhri — agar kal inme se SIRF EK cheez theek ho jaaye, toh pehle kaunsi chunenge?", o:{"Replying to customer messages":"Customer messages ka reply","Answering & returning calls":"Call uthana aur wapas karna","Keeping my Google listing fresh":"Google listing fresh rakhna","Getting & replying to reviews":"Reviews laana aur reply karna","Posting on Facebook / Instagram":"Facebook / Instagram par post karna","Running my ads":"Apne ads chalana","I'd rather keep doing it all myself":"Main khud hi karta rahoon"}}
 };
 function tQ(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].q) || q.q; }
@@ -872,6 +874,8 @@ function renderResults(){
     ["Thinks paid ads would fix it", share("solution_belief", v=>v.includes("Paid ads")||v.startsWith("Ads on"))],
     ["Wants a human to deal with", share("comm_mode", v=>v==="A real human")],
     ["Open to WhatsApp support", share("comm_mode", v=>v==="On WhatsApp")],
+    ["Willing to pay ₹5k+/month", share("willing_pay", v=>["₹5,000–7,000","₹7,000–10,000","Above ₹10,000"].includes(v))],
+    ["Would pay something (not ₹0)", share("willing_pay", v=>v&&v!=="Nothing")],
   ];
   let html=`<div class="signals">${sigs.map(([l,s])=>`<div class="sig"><span class="v">${s.v}</span><span class="l">${l}</span><span class="b">${s.b}</span></div>`).join("")}</div>`;
   let k=0;
