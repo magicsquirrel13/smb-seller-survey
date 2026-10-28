@@ -311,6 +311,8 @@ const COND = {
   // per-channel ad spend only if they actually run that kind of ad (from the "platforms" multi-select)
   runsGoogleAds:a => !!(a.platforms && a.platforms.includes("Google Ads (Search / Maps)")),
   runsMetaAds:  a => !!(a.platforms && a.platforms.includes("Meta ads (Facebook)")),
+  // runs at least one kind of ad (anything in "platforms" other than "I don't run ads")
+  runsAds:      a => !!(a.platforms && a.platforms.some(p=>p!=="I don't run ads")),
 };
 const SECTIONS = [
  { letter:"A", title:"About you", emoji:"👋", blurb:"A few quick things about who you are.", qs:[
@@ -329,9 +331,9 @@ const SECTIONS = [
   {id:"sales", q:"Rough monthly sales (all outlets)", opts:["Under ₹5 lakh","₹5–20 lakh","₹20 lakh – ₹1 crore","Above ₹1 crore","Prefer not to say"], noOther:true},
  ]},
  { letter:"C", title:"How you get customers today", emoji:"🧲", blurb:"Where business comes from right now.", qs:[
-  {id:"presence", q:"Which of these do you have for your business?", hint:"Pick all that apply", multi:true, opts:["A page on Google / Google Maps","A website","Instagram page","Facebook page","WhatsApp Business","None of these"]},
+  {id:"presence", q:"Which of these do you have for your business?", hint:"Pick all that apply", multi:true, opts:["Google Business Profile (Google / Maps listing)","A website","Instagram page","Facebook page","WhatsApp Business","None of these"]},
   {id:"sources", q:"Where do most of your new customers come from?", hint:"Pick all that apply", multi:true,
-    needsFrom:"presence", needs:{"Google — Search / Maps (organic)":"A page on Google / Google Maps","Facebook page (organic)":"Facebook page","Instagram (organic)":"Instagram page","WhatsApp (organic)":"WhatsApp Business","Facebook ads":"Facebook page","Instagram ads":"Instagram page","WhatsApp ads":"WhatsApp Business"},
+    needsFrom:"presence", needs:{"Google — Search / Maps (organic)":"Google Business Profile (Google / Maps listing)","Facebook page (organic)":"Facebook page","Instagram (organic)":"Instagram page","WhatsApp (organic)":"WhatsApp Business","Facebook ads":"Facebook page","Instagram ads":"Instagram page","WhatsApp ads":"WhatsApp Business"},
     groups:[
     {label:"Organic — free / unpaid", tone:"organic", opts:["Walk-ins / passing by","Word of mouth / referrals","Google — Search / Maps (organic)","Facebook page (organic)","Instagram (organic)","WhatsApp (organic)","Justdial / Practo / Zomato / other apps","Pamphlets / newspaper / hoardings"]},
     {label:"Ads — paid", tone:"paid", opts:["Google Ads","Facebook ads","Instagram ads","WhatsApp ads","Influencer marketing"]}
@@ -340,6 +342,7 @@ const SECTIONS = [
  { letter:"D", title:"Your digital marketing", emoji:"📣", blurb:"Agencies, ads, and what you spend.", qs:[
   {id:"who", q:"Who runs your digital marketing?", opts:["A local agency","A freelancer","My own staff","I do it myself","A family member","Nobody right now"]},
   {id:"platforms", q:"Where do you run ads?", hint:"Pick all that apply", multi:true, exclusive:["I don't run ads"], opts:["Google Ads (Search / Maps)","Meta ads (Facebook)","Instagram ads","WhatsApp ads","YouTube ads","Influencer marketing","Justdial / Practo / other apps","I don't run ads"], cond:COND.doesMarketing},
+  {id:"ad_goal", q:"What are you running ads for?", hint:"Pick all that apply", multi:true, opts:["Getting leads / enquiries","More footfall / walk-ins","More phone calls","Online sales / orders","Building awareness / brand"], cond:COND.runsAds},
   {id:"fee", q:"How much do you pay the agency / freelancer per month? (fee only, not ad money)", opts:["Nothing / don't use one","Under ₹5,000","₹5,000–15,000","₹15,000–30,000","₹30,000–50,000","Above ₹50,000"], cond:COND.usesAgency},
   {id:"adspend_google", q:"How much do you spend on Google Ads per month? (media spend paid to Google)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsGoogleAds},
   {id:"adspend_meta", q:"How much do you spend on Facebook ads per month? (media spend paid to Meta)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsMetaAds},
@@ -407,9 +410,10 @@ const HI = {
   team:{q:"Aapke saath kitne log kaam karte hain?", o:{"Just me":"Sirf main","More than 20":"20 se zyada"}},
   sales:{q:"Mahine ki rough sales (saare outlet)", o:{"Prefer not to say":"Nahi batana"}},
   sources:{q:"Zyadatar naye customers kahan se aate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"Walk-ins / passing by":"Walk-in / saamne se guzarte hue","Word of mouth / referrals":"Mooh-zubaani / referral","Pamphlets / newspaper / hoardings":"Pamphlet / newspaper / hoarding"}},
-  presence:{q:"Inmein se aapke business ke paas kya kya hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"A page on Google / Google Maps":"Google / Google Maps par page","A website":"Website","None of these":"Inmein se koi nahi"}},
+  presence:{q:"Inmein se aapke business ke paas kya kya hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"Google Business Profile (Google / Maps listing)":"Google / Google Maps par page","A website":"Website","None of these":"Inmein se koi nahi"}},
   who:{q:"Aapki digital marketing kaun chalaata hai?", o:{"A local agency":"Local agency","A freelancer":"Freelancer","My own staff":"Mera apna staff","I do it myself":"Main khud karta hoon","A family member":"Family member","Nobody right now":"Abhi koi nahi"}},
   platforms:{q:"Aap ads kahan chalate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"I don't run ads":"Main ads nahi chalaata"}},
+  ad_goal:{q:"Aap ads kis cheez ke liye chalate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"Getting leads / enquiries":"Leads / enquiry ke liye","More footfall / walk-ins":"Zyada footfall / walk-in","More phone calls":"Zyada phone call","Online sales / orders":"Online sales / order","Building awareness / brand":"Awareness / brand banane ke liye"}},
   fee:{q:"Agency / freelancer ko mahine ka kitna dete hain? (sirf fee, ad ka paisa nahi)", o:{"Nothing / don't use one":"Kuch nahi / koi nahi hai"}},
   adspend_google:{q:"Google Ads par mahine ka kitna kharch karte hain? (Google ko diya paisa)"},
   adspend_meta:{q:"Facebook ads par mahine ka kitna kharch karte hain? (Meta ko diya paisa)"},
@@ -930,14 +934,21 @@ document.getElementById("clearAll").onclick=async()=>{
   const pin=prompt("Enter PIN to permanently clear ALL responses:");
   if(pin===null) return;                                   // cancelled
   if(pin!==CONFIG.CLEAR_PIN){ es.textContent="Wrong PIN — nothing was deleted."; return; }
-  if(!confirm(`This permanently deletes ALL ${RESP.length} responses for everyone, and cannot be undone.\n\nTip: Download CSV first if you want a backup.\n\nContinue?`)) return;
+  const total=RESP.length;
+  if(!confirm(`This permanently deletes ALL ${total} responses for everyone, and cannot be undone.\n\nTip: Download CSV first if you want a backup.\n\nContinue?`)) return;
   es.textContent="Clearing…";
   try{
-    const { error } = await sb.from("responses").delete().not("id","is",null);  // matches every row
+    const { data, error } = await sb.from("responses").delete().not("id","is",null).select("id");  // delete every row, return what was removed
     if(error) throw error;
-    setQueue([]);                                          // also drop any unsynced local queue
-    await loadRemote();                                    // refresh Results (now empty)
-    es.textContent="✓ All responses cleared.";
+    const removed=(data||[]).length;
+    setQueue([]);                                          // drop this device's pending/unsynced responses
+    localStorage.removeItem(DKEY);                         // drop any half-finished survey on this device
+    await loadRemote();                                    // refresh from the (now empty) server
+    if(removed===0 && total>0){
+      es.textContent="⚠ Server responses were NOT deleted — you still need to add the \"anon delete\" policy in Supabase, then try again.";
+    } else {
+      es.textContent=`✓ Cleared ${removed} response${removed===1?'':'s'}. Everything is wiped.`;
+    }
   }catch(e){ es.textContent="Couldn't clear: "+(e.message||e)+" — did you add the delete policy in Supabase?"; }
 };
 
