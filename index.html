@@ -481,7 +481,7 @@ STEPS.push({kind:"notes"});
 STEPS.push({kind:"finish"});
 
 /* answer model */
-const BLANK_ANS = { answers:{}, other:{}, qnotes:{}, industry:"", businessName:"", city:"", ownerName:"", contactName:"", contactPhone:"", notes:"" };
+const BLANK_ANS = { answers:{}, other:{}, qnotes:{}, industry:"", businessName:"", city:"", ownerName:"", contactName:"", contactPhone:"", contactEmail:"", photo:"", notes:"" };
 let ANS = {...BLANK_ANS};
 let step = 0, dir = "next";
 
@@ -489,6 +489,25 @@ let step = 0, dir = "next";
    DB (Supabase) + offline queue
    ===================================================================== */
 let sb=null, RESP=[], SURVEYOR=null;
+const PHOTO_BUCKET = "survey-photos";   // Supabase Storage bucket (create it once, public — see setup notes)
+function dataURLtoBlob(u){ const [h,b]=u.split(','); const mime=(h.match(/:(.*?);/)||[])[1]||'image/jpeg'; const bin=atob(b); const arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i); return new Blob([arr],{type:mime}); }
+// Upload the captured photo to Storage and attach a reference (photo_id + public URL) to the payload.
+// If offline / upload fails, the base64 is kept in the row as a fallback so the image is never lost.
+async function uploadPhoto(data){
+  if(!data.photo) return data;
+  const id = deviceId()+"-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
+  data.photo_id = id;
+  if(!online()){ return data; }   // keep base64 fallback, reference id already set
+  try{
+    const path = id+".jpg";
+    const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, dataURLtoBlob(data.photo), {contentType:"image/jpeg", upsert:false});
+    if(error) throw error;
+    const { data:pub } = sb.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+    data.photo_url = pub?.publicUrl || "";
+    data.photo = "";   // drop the heavy base64 now that the file itself is stored
+  }catch(e){ /* upload failed — keep base64 in the row as a fallback */ }
+  return data;
+}
 const DKEY="seller-survey-draft", QKEY="seller-survey-queue", WHOKEY="seller-survey-surveyor", DEVKEY="seller-survey-device";
 function configured(){ return !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY); }
 function online(){ return navigator.onLine && !!sb; }
@@ -627,11 +646,42 @@ function renderStart(){
         <datalist id="cityList"><option>Delhi NCR</option><option>Mumbai</option><option>Bengaluru</option><option>Hyderabad</option><option>Chennai</option><option>Pune</option><option>Kolkata</option><option>Ahmedabad</option></datalist></label>
       <label>Owner / person's name (optional)
         <input type="text" class="field" id="ownName" value="${esc(ANS.ownerName||'')}" placeholder="e.g. Dr. Sharma" autocapitalize="words"></label>
+      <label>Phone number (optional)
+        <input type="tel" class="field" id="contPhone" value="${esc(ANS.contactPhone||'')}" placeholder="e.g. 98765 43210" inputmode="tel" autocomplete="off"></label>
+      <label>Email ID (optional)
+        <input type="email" class="field" id="contEmail" value="${esc(ANS.contactEmail||'')}" placeholder="e.g. name@shop.com" inputmode="email" autocapitalize="none" autocomplete="off"></label>
+      <label>Photo of the place (optional)
+        <input type="file" class="field" id="photoInp" accept="image/*" capture="environment" style="padding:10px">
+        <div id="photoPrev" style="margin-top:10px;${ANS.photo?'':'display:none'}">
+          ${ANS.photo?`<img src="${ANS.photo}" alt="interview location" style="max-width:100%;border-radius:12px;border:1px solid var(--line)">`:''}
+          <button type="button" id="photoDel" class="btn ghost" style="margin-top:8px">Remove photo</button>
+        </div></label>
       ${selHtml}
     </div>`;
   document.getElementById("bizName").addEventListener("input",e=>{ ANS.businessName=e.target.value; saveDraft(); });
   document.getElementById("cityName").addEventListener("input",e=>{ ANS.city=e.target.value; saveDraft(); });
   document.getElementById("ownName").addEventListener("input",e=>{ ANS.ownerName=e.target.value; saveDraft(); });
+  document.getElementById("contPhone").addEventListener("input",e=>{ ANS.contactPhone=e.target.value; saveDraft(); });
+  document.getElementById("contEmail").addEventListener("input",e=>{ ANS.contactEmail=e.target.value; saveDraft(); });
+  document.getElementById("photoInp").addEventListener("change",e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    setStatus("Processing photo…");
+    const img=new Image();
+    img.onload=()=>{
+      const max=1000, scale=Math.min(1, max/Math.max(img.width,img.height));
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      ANS.photo=cv.toDataURL("image/jpeg",0.7); saveDraft();
+      const prev=document.getElementById("photoPrev");
+      prev.innerHTML=`<img src="${ANS.photo}" alt="interview location" style="max-width:100%;border-radius:12px;border:1px solid var(--line)"><button type="button" id="photoDel" class="btn ghost" style="margin-top:8px">Remove photo</button>`;
+      prev.style.display="block"; bindPhotoDel(); setStatus("");
+    };
+    img.onerror=()=>setStatus("Could not read that image — try another.","err");
+    img.src=URL.createObjectURL(f);
+  });
+  bindPhotoDel();
+  function bindPhotoDel(){ const d=document.getElementById("photoDel"); if(d) d.onclick=()=>{ ANS.photo=""; saveDraft(); const p=document.getElementById("photoPrev"); p.innerHTML=""; p.style.display="none"; const inp=document.getElementById("photoInp"); if(inp) inp.value=""; }; }
   stageEl().querySelectorAll(".s1sel").forEach(sel=> sel.addEventListener("change",e=>{
     const qid=e.target.dataset.qid, v=e.target.value;
     if(v) ANS.answers[qid]=[v]; else delete ANS.answers[qid];
@@ -829,10 +879,11 @@ async function saveResponse(){
   QS.forEach(q=>{ if(q.cond && !qShown(q)){ delete ANS.answers[q.id]; delete ANS.other[q.id]; } });  // drop answers that became irrelevant
   const data = { answers:ANS.answers, other:ANS.other, qnotes:ANS.qnotes||{}, industry:(ANS.industry||""),
     business:(ANS.businessName||"").slice(0,160), city:(ANS.city||"").slice(0,80), owner:(ANS.ownerName||"").slice(0,120),
-    contactName:(ANS.contactName||"").slice(0,120), contactPhone:(ANS.contactPhone||"").slice(0,30), notes:(ANS.notes||"").slice(0,2000) };
+    contactName:(ANS.contactName||"").slice(0,120), contactPhone:(ANS.contactPhone||"").slice(0,30), contactEmail:(ANS.contactEmail||"").slice(0,160), photo:(ANS.photo||""), photo_id:"", photo_url:"", notes:(ANS.notes||"").slice(0,2000) };
   if(!Object.keys(data.answers).length){ setStatus("Answer at least one question before saving.","err"); return; }
   if(!configured()){ setStatus("Not connected — add Supabase keys in CONFIG to save to the shared database.","err"); return; }
-  const btn=document.getElementById("save"); btn.disabled=true; setStatus("Saving…");
+  const btn=document.getElementById("save"); btn.disabled=true; setStatus(data.photo?"Uploading photo…":"Saving…");
+  await uploadPhoto(data);   // store the photo as a file + attach photo_id / photo_url reference
   const row={ surveyor:SURVEYOR, device:deviceId(), client_time:new Date().toISOString(), payload:data };
   const q=getQueue(); q.push(row); setQueue(q);   // queue first → never lose a response
   await flushQueue();
@@ -853,7 +904,7 @@ function rebuildResp(remoteRows){
   const map=r=>({ at:r.created_at||r.client_time, surveyor:r.surveyor, _synced:!!r.created_at,
     industry:r.payload?.industry||"", business:r.payload?.business||"", city:r.payload?.city||"", owner:r.payload?.owner||"",
     answers:r.payload?.answers||{}, other:r.payload?.other||{}, qnotes:r.payload?.qnotes||{},
-    contactName:r.payload?.contactName||"", contactPhone:r.payload?.contactPhone||"", notes:r.payload?.notes||"" });
+    contactName:r.payload?.contactName||"", contactPhone:r.payload?.contactPhone||"", contactEmail:r.payload?.contactEmail||"", photo:r.payload?.photo||"", photo_id:r.payload?.photo_id||"", photo_url:r.payload?.photo_url||"", notes:r.payload?.notes||"" });
   RESP=[...getQueue().map(map), ...(remoteRows||[]).map(map)];
   renderResults();
 }
@@ -916,9 +967,9 @@ document.getElementById("export").onclick=()=>{
   const es=document.getElementById("exportStatus");
   if(!RESP.length){ es.textContent="No responses to download yet."; return; }
   const noteQs=QS.filter(q=>q.noteField);
-  const head=["Saved at","Surveyor","Industry","Business","City","Owner",...QS.map(q=>q.q),...noteQs.map(q=>q.q+" — note"),"Notes"];
+  const head=["Saved at","Surveyor","Industry","Business","City","Owner","Phone","Email","Photo ID","Photo link",...QS.map(q=>q.q),...noteQs.map(q=>q.q+" — note"),"Notes"];
   const cell=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const lines=[head.map(cell).join(",")].concat(RESP.map(r=>[r.at,r.surveyor,r.industry,r.business,r.city,r.owner,
+  const lines=[head.map(cell).join(",")].concat(RESP.map(r=>[r.at,r.surveyor,r.industry,r.business,r.city,r.owner,r.contactPhone,r.contactEmail,r.photo_id,(r.photo_url||(r.photo?"(stored in response — not yet uploaded)":"")),
     ...QS.map(q=>(r.answers?.[q.id]||[]).map(v=>v===OTHER?`Other: ${r.other?.[q.id]||""}`:v).join("; ")),
     ...noteQs.map(q=>r.qnotes?.[q.id]||""),
     r.notes].map(cell).join(",")));
