@@ -342,7 +342,7 @@ const SECTIONS = [
  { letter:"D", title:"Your digital marketing", emoji:"📣", blurb:"Agencies, ads, and what you spend.", qs:[
   {id:"who", q:"Who runs your digital marketing?", opts:["A local agency","A freelancer","My own staff","I do it myself","A family member","Nobody right now"]},
   {id:"platforms", q:"Where do you run ads?", hint:"Pick all that apply", multi:true, exclusive:["I don't run ads"], opts:["Google Ads (Search / Maps)","Meta ads (Facebook)","Instagram ads","WhatsApp ads","YouTube ads","Influencer marketing","Justdial / Practo / other apps","I don't run ads"], cond:COND.doesMarketing},
-  {id:"ad_goal", q:"What are you running ads for?", hint:"Pick all that apply", multi:true, opts:["Getting leads / enquiries","More footfall / walk-ins","More phone calls","Online sales / orders","Building awareness / brand"], cond:COND.runsAds},
+  {id:"ad_goal", q:"Why do you run ads? (your main objective)", hint:"Pick all that apply", multi:true, opts:["Getting leads / enquiries","More footfall / walk-ins","More phone calls","Online sales / orders","Building awareness / brand"], cond:COND.runsAds},
   {id:"fee", q:"How much do you pay the agency / freelancer per month? (fee only, not ad money)", opts:["Nothing / don't use one","Under ₹5,000","₹5,000–15,000","₹15,000–30,000","₹30,000–50,000","Above ₹50,000"], cond:COND.usesAgency},
   {id:"adspend_google", q:"How much do you spend on Google Ads per month? (media spend paid to Google)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsGoogleAds},
   {id:"adspend_meta", q:"How much do you spend on Facebook ads per month? (media spend paid to Meta)", opts:["Under ₹10,000","₹10,000–25,000","₹25,000–50,000","₹50,000 – ₹1 lakh","Above ₹1 lakh"], noOther:true, cond:COND.runsMetaAds},
@@ -413,7 +413,7 @@ const HI = {
   presence:{q:"Inmein se aapke business ke paas kya kya hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"Google Business Profile (Google / Maps listing)":"Google / Google Maps par page","A website":"Website","None of these":"Inmein se koi nahi"}},
   who:{q:"Aapki digital marketing kaun chalaata hai?", o:{"A local agency":"Local agency","A freelancer":"Freelancer","My own staff":"Mera apna staff","I do it myself":"Main khud karta hoon","A family member":"Family member","Nobody right now":"Abhi koi nahi"}},
   platforms:{q:"Aap ads kahan chalate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"I don't run ads":"Main ads nahi chalaata"}},
-  ad_goal:{q:"Aap ads kis cheez ke liye chalate hain?", hint:"Jo bhi lagu ho, sab chunein", o:{"Getting leads / enquiries":"Leads / enquiry ke liye","More footfall / walk-ins":"Zyada footfall / walk-in","More phone calls":"Zyada phone call","Online sales / orders":"Online sales / order","Building awareness / brand":"Awareness / brand banane ke liye"}},
+  ad_goal:{q:"Aap ads kyun chalate hain? (main objective)", hint:"Jo bhi lagu ho, sab chunein", o:{"Getting leads / enquiries":"Leads / enquiry ke liye","More footfall / walk-ins":"Zyada footfall / walk-in","More phone calls":"Zyada phone call","Online sales / orders":"Online sales / order","Building awareness / brand":"Awareness / brand banane ke liye"}},
   fee:{q:"Agency / freelancer ko mahine ka kitna dete hain? (sirf fee, ad ka paisa nahi)", o:{"Nothing / don't use one":"Kuch nahi / koi nahi hai"}},
   adspend_google:{q:"Google Ads par mahine ka kitna kharch karte hain? (Google ko diya paisa)"},
   adspend_meta:{q:"Facebook ads par mahine ka kitna kharch karte hain? (Meta ko diya paisa)"},
