@@ -103,6 +103,53 @@ textarea.field{min-height:120px;resize:vertical}
 .subfields{display:grid;gap:10px;margin-top:12px}
 .subfields label{font-size:13px;color:var(--muted);display:grid;gap:5px}
 
+/* need-gap grid (Section G) */
+.grid{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.gridrow{border:2px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface)}
+.gridlabel{font-weight:650;font-size:15px;margin-bottom:10px;line-height:1.3}
+.gridscales{display:flex;flex-direction:column;gap:9px}
+.gscale{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.gcap{font-size:12px;color:var(--muted);min-width:78px;font-weight:600}
+.gpill{font:inherit;font-size:14px;font-weight:600;padding:8px 14px;border:2px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer;flex:1;min-width:64px}
+.gpill.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.gridstatus{margin-top:14px;font-size:13px;font-weight:600;color:var(--muted);text-align:center}
+.gridstatus.warn{color:var(--bad)}
+@media(min-width:620px){ .gscale{flex-wrap:nowrap} .gpill{flex:0 1 auto;min-width:72px} }
+
+/* gap chips under gap_tried */
+.gapchips{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 16px}
+.gapchip{background:var(--marigold-soft);color:#7a5407;font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px}
+
+/* capability card (Section H intro) */
+.intro-card.capcard{text-align:left;align-items:stretch;justify-items:stretch}
+.cap-note{font-size:12.5px;color:var(--marigold);font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.cap-list{display:flex;flex-direction:column;gap:12px;padding-left:24px;margin:0}
+.cap-list li{font-size:18px;line-height:1.4;font-weight:550}
+
+/* results filters */
+.resfilter{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.frow{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.flab{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;min-width:58px}
+.fbtn{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border:2px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer}
+.fbtn.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.ncount{margin-left:auto;font-size:13px;font-weight:700;color:var(--teal)}
+/* need-gap table */
+.needgap{margin:22px 0}
+.needgap table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+.needgap th,.needgap td{text-align:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+.needgap th:first-child,.needgap td:first-child{text-align:left}
+.needgap thead th{font-size:11.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.02em}
+.needgap tr.top{background:var(--marigold-soft)}
+.needgap tr.top td{font-weight:650}
+/* admin login */
+.loginbox{max-width:360px;margin:30px auto;display:flex;flex-direction:column;gap:10px;text-align:center}
+.loginbox h3{margin:0;font-size:20px}
+.loginbox .sub{color:var(--muted);font-size:14px;margin:0 0 6px}
+/* verbatims */
+.verbatims{margin:20px 0}
+.vlist{display:flex;flex-direction:column;gap:7px;max-height:260px;overflow:auto;margin-top:8px;padding-right:4px}
+.vq{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:8px;padding:8px 11px;font-size:14px;line-height:1.4}
+
 /* section intro card */
 .intro-card{text-align:center;padding:24px 10px;display:grid;gap:14px;justify-items:center;margin:auto 0}
 .intro-emoji{font-size:64px;line-height:1;animation:pop .4s ease}
@@ -246,7 +293,6 @@ textarea.field{min-height:120px;resize:vertical}
     <div class="eyebrow">Field survey</div>
     <h2 style="font-size:26px;font-weight:800">Your name (interviewer)</h2>
     <div id="whoList" style="display:grid;gap:12px"></div>
-    <button class="linkbtn" id="toResultsFromGate" style="justify-self:start;margin-top:6px">View results / export →</button>
   </section>
 
   <!-- tabs (shown after sign in) -->
@@ -294,14 +340,44 @@ textarea.field{min-height:120px;resize:vertical}
 const CONFIG = {
   SUPABASE_URL: "https://psybsqqkvmltaqzoczwd.supabase.co",
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzeWJzcXFrdm1sdGFxem9jendkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMDM5NzgsImV4cCI6MjEwODU3OTk3OH0.Qn3jBB7IghITsvRhEESvbySd-7E6RlCCFd8QOWBgv8k",
-  TEAM: [],           // not used — each surveyor just types their own name on the sign-in screen
-  CLEAR_PIN: "1309"   // PIN to wipe all responses from the Results tab
+  TEAM: []            // not used — each surveyor just types their own name on the sign-in screen
+  // No admin password here: viewing / downloading / clearing results requires a Supabase login (admin account),
+  // enforced by Row-Level Security in the database. See "Security setup" in README.md.
 };
 
 const OTHER = "__other";
+// Need-gap grid rows (Section G). Each becomes two stored answers: gap_<id>_imp and gap_<id>_hand.
+const GAP_ROWS = [
+  {id:"found",    label:"Being found on Google and Maps",                 hi:"Google aur Maps par dikhna"},
+  {id:"reviews",  label:"Getting and replying to reviews",                hi:"Reviews laana aur reply karna"},
+  {id:"content",  label:"Putting out fresh photos, posts and offers",     hi:"Nayi photo, post aur offer daalna"},
+  {id:"ads",      label:"Running ads that bring enquiries",               hi:"Aise ads chalana jo enquiry laayein"},
+  {id:"calls",    label:"Answering every call and message",              hi:"Har call aur message ka jawab dena"},
+  {id:"tracking", label:"Knowing which marketing actually brings customers", hi:"Pata hona ki kaunsi marketing customer laati hai"}
+];
+const GAP_IMP = ["Not","Somewhat","Very"];
+const GAP_HAND = ["Badly","Okay","Well"];
+const GAP_IMP_HI = {Not:"Zaroori nahi", Somewhat:"Thoda", Very:"Bahut"};
+const GAP_HAND_HI = {Badly:"Kharab", Okay:"Theek-thaak", Well:"Achha"};
+function gapImp(a,id){ return (a["gap_"+id+"_imp"]||[])[0]||""; }
+function gapHand(a,id){ return (a["gap_"+id+"_hand"]||[])[0]||""; }
+function isGapRow(a,id){ return gapImp(a,id)==="Very" && (gapHand(a,id)==="Badly" || gapHand(a,id)==="Okay"); }
+function gapRowsFor(a){ return GAP_ROWS.filter(r=>isGapRow(a,r.id)); }
+// Virtual sub-questions for the grid so CSV + results can iterate them like normal questions.
+const GRID_SUBQS = GAP_ROWS.flatMap(r=>[
+  {id:"gap_"+r.id+"_imp",  q:"Gap · "+r.label+" · Importance",    opts:GAP_IMP,  noOther:true},
+  {id:"gap_"+r.id+"_hand", q:"Gap · "+r.label+" · Handled today", opts:GAP_HAND, noOther:true}
+]);
+const FIT_MAP = {found:"1 · Google & Maps listing + website", reviews:"2 · Reviews", content:"3 · Posts & offers", ads:"4 · Ads", calls:"5 · AI calls & WhatsApp", tracking:"6 · Customer report"};
+const CLUSTER_LIST = ["All","A. Appointment-led healthcare","B. Appointment-led wellness","C. High-ticket, considered","D. Walk-in","E. Urgent service calls","Unclustered"];
+
 /* conditional-display helpers — a question with cond() only shows when it returns true.
    `a` is the answers map (id -> array of chosen values). */
 const COND = {
+  // Section G: only ask "what have you tried" if at least one job is a real gap (Very important + handled Badly/Okay)
+  hasGap:       a => gapRowsFor(a).length>0,
+  // Section H: ask the "why not" reason only when the trial answer is No or Maybe
+  notYes:       a => { const v=(a.fit_trial||[])[0]; return v==="No" || v==="Maybe — call me later"; },
   // generation only makes sense for an owner-type role — hidden for a manager, or until a role is picked
   isOwner:      a => !!(a.role && ["Owner","Partner / co-owner","Family member who runs it"].includes(a.role[0])),
   // marketing-depth only if they actually do marketing — hidden for "Nobody right now", or until "who" is picked
@@ -324,7 +400,7 @@ const SECTIONS = [
   {id:"lang", q:"Which language do you prefer on your phone for business?", opts:["English","Hindi","Hinglish (mix)","Regional language"], onSlide1:true, s1label:"Language of the conversation"},
  ]},
  { letter:"B", title:"Your business", emoji:"🏪", blurb:"Tell us about the shop or clinic.", qs:[
-  {id:"type", q:"What kind of business is it?", opts:["Clinic / doctor","Diagnostic lab","Dentist / physio / practitioner","Play school / coaching","Salon / spa","Gym / fitness","Restaurant / café","Retail shop","Home services / repairs","Real estate / interiors"], onSlide1:true, s1label:"Business type"},
+  {id:"type", q:"What kind of business is it?", opts:["Clinic / doctor","Dentist / physio / practitioner","Diagnostic lab","Pharmacy","Optical / eye care","Salon / spa","Gym / fitness","Real estate / interiors","Play school / coaching","Retail – high value (electronics, furniture, jewellery)","Retail – everyday (grocery, apparel, general)","Restaurant / café","Home services / repairs"], onSlide1:true, s1label:"Business type"},
   {id:"locations", q:"How many outlets or branches do you have?", opts:["1","2–3","4–10","More than 10"]},
   {id:"years", q:"How old is the business?", opts:["Less than 2 years","2–5 years","5–10 years","More than 10 years"]},
   {id:"team", q:"How many people work with you?", opts:["Just me","2–5","6–20","More than 20"]},
@@ -350,33 +426,28 @@ const SECTIONS = [
   {id:"switched", q:"How many agencies have you changed in the last 2 years?", opts:["None","1","2","3 or more"], noOther:true, cond:COND.usesAgency},
   {id:"sat", q:"How happy are you with your agency / current setup?", opts:["Very unhappy","Unhappy","Okay","Happy","Very happy"], noOther:true, cond:COND.doesMarketing},
  ]},
- { letter:"E", title:"Getting customers in", emoji:"🧲", blurb:"What you notice about new customers coming in.", qs:[
+ { letter:"E", title:"Pain point", emoji:"🎯", blurb:"In their own words — don't suggest answers.", qs:[
+  {id:"pain_open", q:"What's the biggest problem in getting more customers right now?", hint:"Don't read options. Write their words, then pick the closest code.", noteField:"Their exact words…", noteAbove:true, noAuto:true, opts:["Not found online","Too few enquiries","Enquiries don't convert","Missed calls / messages","Bad or too few reviews","No time to manage it","Marketing is costly / not working","Not a marketing problem (price, location, staff, competition)"]},
+  {id:"pain_loss", q:"Because of this, roughly how many customers do you lose in a week?", opts:["None","1–5","6–15","More than 15","Don't know"], noOther:true},
+ ]},
+ { letter:"F", title:"What's happening today", emoji:"📱", blurb:"The things you can check right now on the phone.", qs:[
   {id:"customer_trend", q:"Compared with a year ago, is the flow of new customers going up or down?", opts:["Growing steadily","About the same","Slowly dropping","Dropping fast","Hard to say"], noOther:true},
   {id:"found_online", q:"Right now, search your own business on Google — what do you see?", hint:"Ask them to actually do it on their phone", opts:["I show up on top","I show up, but lower down","Wrong or old information shows","I don't show up at all","I've never checked"], noOther:true},
   {id:"competitor_check", q:"Now search what a customer would type to find a shop like yours. Who shows up above you?", opts:["I'm at the top","A competitor is above me","Only competitors — I'm not there","Just directories / ads, no real shops","Didn't check"], noOther:true},
-  {id:"enquiry_slip", q:"What happens to the calls and messages you can't get to in time?", opts:["We get back to all of them","We get back to most","Many just slip through","We lose them","Not sure"], noOther:true},
   {id:"enquiry_volume", q:"On an average day, how many customer enquiries do you get — calls and messages together?", opts:["Under 5","5–15","15–30","30–50","More than 50"], noOther:true},
   {id:"missed_calls", q:"On a busy day, how many customer calls go unanswered?", opts:["None","1–5","6–15","More than 15","Don't know"], noOther:true},
+  {id:"enquiry_slip", q:"What happens to the calls and messages you can't get to in time?", opts:["We get back to all of them","We get back to most","Many just slip through","We lose them","Not sure"], noOther:true},
  ]},
- { letter:"F", title:"How you look online", emoji:"📱", blurb:"The things you can open on your phone — your page, posts and reviews.", qs:[
-  {id:"presence_problems", q:"What bothers you about how your business looks online?", hint:"Pick all that apply", multi:true, opts:["My page looks empty or outdated","No recent photos or posts","Bad reviews, or very few","I don't know what to post","No time to keep it updated","Competitors look better than me","I don't have a proper page"]},
-  {id:"reviews_feeling", q:"How do you feel about your Google reviews and ratings?", opts:["Happy with them","They're okay","Worried about them","I don't get many","I never look"], noOther:true},
-  {id:"post_frequency", q:"How often does something new go up — a post, photo or offer?", opts:["Several times a week","About once a week","Once in a while","Rarely or never"], noOther:true},
-  {id:"creatives", q:"Who makes the photos, posts and offers you put out?", opts:["I make them on my phone","A staff member does","A designer / agency","We rarely make any","We don't post at all"], noOther:true},
-  {id:"creative_blocker", q:"What most gets in the way of putting out good photos & posts regularly?", hint:"Pick all that apply", multi:true, opts:["No time to make them","Don't know what to post","No one to design / edit","They look unprofessional","Run out of ideas","Too costly to outsource","Nothing — we manage fine"]},
-  {id:"search_terms", q:"Do you know the exact words customers type into Google to find a business like yours?", opts:["Yes — clearly","Some idea","No — I don't know"], noOther:true},
- ]},
- { letter:"G", title:"Running it all yourself", emoji:"⏳", blurb:"Time, people and keeping on top of everything.", qs:[
-  {id:"running_problems", q:"What's hard about running all of this day to day?", hint:"Pick all that apply", multi:true, opts:["No time for it","I'm doing everything myself","No staff with the right skills","Can't afford to hire help","I don't know how to do it","Money spent but no clear result","Too many apps and tools to manage"]},
+ { letter:"G", title:"Need gap", emoji:"🧩", blurb:"What matters to them, and what's missing today.", qs:[
+  {id:"gap_grid", grid:true, q:"For each of these: how important is it, and how well is it handled today?", hint:"Read each row out."},
+  {id:"gap_tried", q:"For these, what have you already tried?", hint:"Pick all that apply", multi:true, exclusive:["Nothing yet"], gapChips:true, cond:COND.hasGap, opts:["Agency","Freelancer","Practo, Justdial or similar app","Did it myself","Staff member","Nothing yet"]},
   {id:"owner_time", q:"How much of your own time goes into customers and online stuff each day?", opts:["Almost none","Under 1 hour","1–2 hours","More than 2 hours"], noOther:true},
-  {id:"who_does_digital", q:"Who actually keeps up your online presence and replies to customers?", opts:["I do it all myself","A staff member","A family member","An outside agency / person","Nobody really"]},
-  {id:"attribution", q:"Can you see which ad or platform actually brought you each customer?", opts:["Yes — clearly","Roughly","No — I can't really tell"], noOther:true},
  ]},
- { letter:"H", title:"What they think would fix it", emoji:"💡", blurb:"Their own view — not a pitch.", qs:[
-  {id:"solution_belief", q:"In your own view, what would actually fix this for your business?", hint:"Pick all that apply", multi:true, exclusive:["Nothing really needs fixing"], opts:["Better organic / free visibility (Google, Maps, SEO)","Paid ads (Google Ads)","Ads on Meta (Facebook)","Ads on Instagram","Ads on WhatsApp","Influencer marketing","A voice bot that handles calls","A WhatsApp assistant that handles chats","Nothing really needs fixing"]},
-  {id:"comm_mode", q:"If you had help for all this, how would you want to reach them?", hint:"Pick all that apply", multi:true, opts:["A real human","On WhatsApp","Raise a ticket"]},
-  {id:"one_handoff", q:"Of everything we discussed, which ONE would you most want fixed first?", opts:["Replying to customer messages","Answering & returning calls","Keeping my Google listing fresh","Getting & replying to reviews","Posting on Facebook / Instagram","Running my ads","Influencer / creator promotions","I'd rather keep doing it all myself"]},
-  {id:"willing_pay", q:"Last one — if a service took care of all of this for you, what would you pay for it each month?", opts:["Nothing","Under ₹1,000","₹1,000–3,000","₹3,000–5,000","₹5,000–7,000","₹7,000–10,000","Above ₹10,000"], noOther:true},
+ { letter:"H", title:"Product fit", emoji:"✨", blurb:"Turn the tablet to the owner. Read each line once.", capCard:true, qs:[
+  {id:"fit_first", q:"Which ONE of these would you want first?", opts:["1 · Google & Maps listing + website","2 · Reviews","3 · Posts & offers","4 · Ads","5 · AI calls & WhatsApp","6 · Customer report","None of these"], noOther:true},
+  {id:"fit_trial", q:"We'll set this up free for 2 weeks. Can we come back to start it?", contact:true, opts:["Yes","Maybe — call me later","No"], noOther:true},
+  {id:"fit_reason", q:"What's the main reason?", cond:COND.notYes, opts:["Not a priority now","Already have someone for this","Don't believe it will work","Cost","Don't want AI talking to my customers"]},
+  {id:"fit_price", q:"After the trial, it's ₹{price} a month. Would you continue?", opts:["Definitely","Probably","Probably not","No"], noOther:true},
  ]},
 ];
 const QS = SECTIONS.flatMap(s=>s.qs);
@@ -392,10 +463,10 @@ const HI = {
     B:{t:"Aapka business", b:"Apni shop ya clinic ke baare mein batayein."},
     C:{t:"Aaj customers kaise aate hain", b:"Abhi business kahan se aata hai."},
     D:{t:"Aapki digital marketing", b:"Agency, ads, aur kharcha."},
-    E:{t:"Naye customers laana", b:"Naye customers aane ke baare mein aap kya dekhte hain."},
-    F:{t:"Online aap kaise dikhte hain", b:"Jo aap phone par khol sakte hain — page, post aur reviews."},
-    G:{t:"Sab khud sambhaalna", b:"Time, log aur sab kuch sambhaalna."},
-    H:{t:"Unke hisaab se kya theek karega", b:"Unki apni raai — koi pitch nahi."}
+    E:{t:"Sabse badi pareshaani", b:"Unke apne shabdon mein — jawab mat sujhaayein."},
+    F:{t:"Abhi kya ho raha hai", b:"Jo abhi phone par check kar sakte hain."},
+    G:{t:"Kya zaroori hai, kya kami hai", b:"Unke liye kya zaroori hai, aur kya kami hai."},
+    H:{t:"Hum kya kar sakte hain", b:"Tablet owner ki taraf ghumaayein. Har line ek baar padhein."}
   },
   _groups:{"Organic — free / unpaid":"Organic — free / bina paise","Ads — paid":"Ads — paid"},
   role:{q:"Business mein aapka role kya hai?", o:{"Owner":"Maalik","Family member who runs it":"Family member jo chalata hai","Manager (employee)":"Manager (employee)"}},
@@ -404,7 +475,7 @@ const HI = {
   gender:{q:"Gender", s1:"Respondent ka gender", o:{"Prefer not to say":"Nahi batana"}},
   edu:{q:"Sabse zyada padhai (education)"},
   lang:{q:"Business ke liye phone par kaunsi bhasha pasand hai?", s1:"Baat-cheet ki bhasha", o:{"Regional language":"Regional bhasha"}},
-  type:{q:"Yeh kis tarah ka business hai?", s1:"Business type", o:{"Retail shop":"Retail shop / dukaan","Home services / repairs":"Home services / repair"}},
+  type:{q:"Yeh kis tarah ka business hai?", s1:"Business type", o:{"Pharmacy":"Pharmacy / chemist","Optical / eye care":"Optical / aankhon ki dukaan","Retail – high value (electronics, furniture, jewellery)":"Retail – mehenga saamaan (electronics, furniture, jewellery)","Retail – everyday (grocery, apparel, general)":"Retail – roz ka saamaan (grocery, kapde, general)","Home services / repairs":"Home services / repair"}},
   locations:{q:"Aapke kitne outlet ya branch hain?"},
   years:{q:"Business kitna purana hai?", o:{"Less than 2 years":"2 saal se kam","2–5 years":"2–5 saal","5–10 years":"5–10 saal","More than 10 years":"10 saal se zyada"}},
   team:{q:"Aapke saath kitne log kaam karte hain?", o:{"Just me":"Sirf main","More than 20":"20 se zyada"}},
@@ -426,20 +497,15 @@ const HI = {
   enquiry_slip:{q:"Jo call aur message aap time par nahi dekh paate, unka kya hota hai?", o:{"We get back to all of them":"Sabko wapas reply karte hain","We get back to most":"Zyadatar ko","Many just slip through":"Kaafi chhoot jaate hain","We lose them":"Haath se nikal jaate hain","Not sure":"Pata nahi"}},
   enquiry_volume:{q:"Average din mein kitni customer enquiry aati hain — call aur message milaakar?", o:{"Under 5":"5 se kam","More than 50":"50 se zyada"}},
   missed_calls:{q:"Busy din mein kitni customer call miss ho jaati hain?", o:{"None":"Koi nahi","More than 15":"15 se zyada","Don't know":"Pata nahi"}},
-  presence_problems:{q:"Online aapka business kaisa dikhta hai, usme kya pareshaan karta hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"My page looks empty or outdated":"Mera page khaali ya purana lagta hai","No recent photos or posts":"Koi nayi photo ya post nahi","Bad reviews, or very few":"Bure reviews, ya bahut kam","I don't know what to post":"Pata nahi kya post karoon","No time to keep it updated":"Update rakhne ka time nahi","Competitors look better than me":"Competitor mujhse acche dikhte hain","I don't have a proper page":"Mera proper page hi nahi hai"}},
-  reviews_feeling:{q:"Apne Google reviews aur rating ke baare mein kaisa lagta hai?", o:{"Happy with them":"Khush hoon","They're okay":"Theek hain","Worried about them":"Chinta hoti hai","I don't get many":"Zyada aate hi nahi","I never look":"Kabhi dekhta hi nahi"}},
-  post_frequency:{q:"Kitni baar kuch naya daalte hain — post, photo ya offer?", o:{"Several times a week":"Hafte mein kai baar","About once a week":"Hafte mein ek baar","Once in a while":"Kabhi-kabhi","Rarely or never":"Bahut kam ya kabhi nahi"}},
-  creatives:{q:"Aapki photo, post aur offer kaun banata hai?", o:{"I make them on my phone":"Main phone par banata hoon","A staff member does":"Staff banata hai","A designer / agency":"Designer / agency","We rarely make any":"Bahut kam banate hain","We don't post at all":"Hum post hi nahi karte"}},
-  creative_blocker:{q:"Achhi photo aur post regular daalne mein sabse zyada kya rukaavat hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"No time to make them":"Banane ka time nahi","Don't know what to post":"Pata nahi kya post karein","No one to design / edit":"Design / edit karne wala koi nahi","They look unprofessional":"Professional nahi lagte","Run out of ideas":"Ideas khatam ho jaate hain","Too costly to outsource":"Bahar se karwana mehenga","Nothing — we manage fine":"Kuch nahi — hum theek karte hain"}},
-  search_terms:{q:"Aapko pata hai customer Google par kya exact shabd likhte hain aap jaisa business dhoondhne ke liye?", o:{"Yes — clearly":"Haan — saaf pata hai","Some idea":"Thoda andaza","No — I don't know":"Nahi — pata nahi"}},
-  running_problems:{q:"Yeh sab roz chalaane mein kya mushkil hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"No time for it":"Iske liye time nahi","I'm doing everything myself":"Main sab khud karta hoon","No staff with the right skills":"Sahi skill wala staff nahi","Can't afford to hire help":"Help rakhne ki gunjaish nahi","I don't know how to do it":"Mujhe karna nahi aata","Money spent but no clear result":"Paisa lagta hai par result nahi dikhta","Too many apps and tools to manage":"Bahut saare apps aur tools sambhaalne padte hain"}},
+  pain_open:{q:"Abhi naye customers laane mein sabse badi pareshaani kya hai?", hint:"Options mat padhein. Unke shabd likhein, phir sabse milta code chunein.", o:{"Not found online":"Online nahi milte","Too few enquiries":"Bahut kam enquiry","Enquiries don't convert":"Enquiry aati hai par customer nahi bante","Missed calls / messages":"Call / message chhoot jaate hain","Bad or too few reviews":"Bure ya bahut kam reviews","No time to manage it":"Sambhaalne ka time nahi","Marketing is costly / not working":"Marketing mehengi / kaam nahi karti","Not a marketing problem (price, location, staff, competition)":"Marketing ki dikkat nahi (daam, jagah, staff, competition)"}},
+  pain_loss:{q:"Is wajah se ek hafte mein lagbhag kitne customers haath se nikal jaate hain?", o:{"None":"Koi nahi","More than 15":"15 se zyada","Don't know":"Pata nahi"}},
+  gap_grid:{q:"Har ek ke liye: yeh kitna zaroori hai, aur abhi kitna achha ho raha hai?", hint:"Har line padh kar sunaayein."},
+  gap_tried:{q:"Inke liye aapne ab tak kya try kiya hai?", hint:"Jo bhi lagu ho, sab chunein", o:{"Agency":"Agency","Freelancer":"Freelancer","Practo, Justdial or similar app":"Practo, Justdial ya aisi app","Did it myself":"Khud kiya","Staff member":"Staff ne kiya","Nothing yet":"Abhi tak kuch nahi"}},
   owner_time:{q:"Roz customers aur online cheezon mein aapka kitna time jaata hai?", o:{"Almost none":"Lagbhag kuch nahi","Under 1 hour":"1 ghante se kam","1–2 hours":"1–2 ghante","More than 2 hours":"2 ghante se zyada"}},
-  who_does_digital:{q:"Online presence aur customers ko reply asal mein kaun sambhaalta hai?", o:{"I do it all myself":"Main sab khud","A staff member":"Ek staff","A family member":"Family member","An outside agency / person":"Bahar ki agency / banda","Nobody really":"Sach mein koi nahi"}},
-  attribution:{q:"Aap dekh paate hain ki kaunsa ad ya platform har customer laaya?", o:{"Yes — clearly":"Haan — saaf","Roughly":"Lagbhag","No — I can't really tell":"Nahi — pata nahi chalta"}},
-  solution_belief:{q:"Aapke hisaab se, aapke business ke liye asal mein kya cheez theek karegi?", hint:"Jo bhi lagu ho, sab chunein", o:{"Better organic / free visibility (Google, Maps, SEO)":"Behtar organic / free visibility (Google, Maps, SEO)","Ads on Meta (Facebook)":"Meta (Facebook) par ads","Ads on Instagram":"Instagram par ads","Ads on WhatsApp":"WhatsApp par ads","A voice bot that handles calls":"Ek voice bot jo call sambhaale","A WhatsApp assistant that handles chats":"Ek WhatsApp assistant jo chat sambhaale","Nothing really needs fixing":"Kuch theek karne ki zaroorat nahi"}},
-  comm_mode:{q:"Agar iske liye help mile, toh aap unse kaise judna chahenge?", hint:"Jo bhi lagu ho, sab chunein", o:{"A real human":"Ek asli insaan","On WhatsApp":"WhatsApp par","Raise a ticket":"Ticket raise karein"}},
-  willing_pay:{q:"Aakhri — agar ek service yeh sab aapke liye sambhaale, toh mahine ka kitna dena chahenge?", o:{"Nothing":"Kuch nahi","Under ₹1,000":"₹1,000 se kam","Above ₹10,000":"₹10,000 se zyada"}},
-  one_handoff:{q:"In sab mein se, SIRF EK cheez jo aap sabse pehle theek karwana chahenge?", o:{"Replying to customer messages":"Customer messages ka reply","Answering & returning calls":"Call uthana aur wapas karna","Keeping my Google listing fresh":"Google listing fresh rakhna","Getting & replying to reviews":"Reviews laana aur reply karna","Posting on Facebook / Instagram":"Facebook / Instagram par post karna","Running my ads":"Apne ads chalana","Influencer / creator promotions":"Influencer / creator promotion","I'd rather keep doing it all myself":"Main khud hi karta rahoon"}}
+  fit_first:{q:"Inmein se kaunsi EK cheez aap sabse pehle chahenge?", o:{"1 · Google & Maps listing + website":"1 · Google & Maps listing + website","2 · Reviews":"2 · Reviews","3 · Posts & offers":"3 · Post aur offer","4 · Ads":"4 · Ads","5 · AI calls & WhatsApp":"5 · AI calls aur WhatsApp","6 · Customer report":"6 · Customer report","None of these":"Inmein se koi nahi"}},
+  fit_trial:{q:"Hum 2 hafte free mein set up kar dete hain. Kya hum shuru karne ke liye wapas aa sakte hain?", o:{"Yes":"Haan","Maybe — call me later":"Shaayad — baad mein call karein","No":"Nahi"}},
+  fit_reason:{q:"Mukhya wajah kya hai?", o:{"Not a priority now":"Abhi zaroori nahi","Already have someone for this":"Iske liye pehle se koi hai","Don't believe it will work":"Lagta nahi ki yeh kaam karega","Cost":"Kharcha","Don't want AI talking to my customers":"Nahi chahte ki AI mere customers se baat kare"}},
+  fit_price:{q:"Trial ke baad yeh ₹{price} mahina hai. Kya aap continue karenge?", o:{"Definitely":"Pakka","Probably":"Shaayad haan","Probably not":"Shaayad nahi","No":"Nahi"}}
 };
 function tQ(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].q) || q.q; }
 function tHint(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].hint) || q.hint || ""; }
@@ -449,6 +515,23 @@ function tSecT(sec){ return (uiLang==='hi' && HI._sec[sec.letter] && HI._sec[sec
 function tSecB(sec){ return (uiLang==='hi' && HI._sec[sec.letter] && HI._sec[sec.letter].b) || sec.blurb; }
 function tS1(q){ return (uiLang==='hi' && HI[q.id] && HI[q.id].s1) || q.s1label || q.q; }
 function tUI(hi,en){ return uiLang==='hi' ? hi : en; }
+// Business clusters — analysis only, never shown in the interview. Derived from the "type" answer at read time.
+const CLUSTER = {
+  "Clinic / doctor":"A. Appointment-led healthcare",
+  "Dentist / physio / practitioner":"A. Appointment-led healthcare",
+  "Diagnostic lab":"A. Appointment-led healthcare",
+  "Optical / eye care":"A. Appointment-led healthcare",
+  "Salon / spa":"B. Appointment-led wellness",
+  "Gym / fitness":"B. Appointment-led wellness",
+  "Real estate / interiors":"C. High-ticket, considered",
+  "Play school / coaching":"C. High-ticket, considered",
+  "Retail – high value (electronics, furniture, jewellery)":"C. High-ticket, considered",
+  "Restaurant / café":"D. Walk-in",
+  "Retail – everyday (grocery, apparel, general)":"D. Walk-in",
+  "Pharmacy":"D. Walk-in",
+  "Home services / repairs":"E. Urgent service calls"
+};
+function clusterOf(r){ const t=(r.answers?.type||[])[0]; return (t && CLUSTER[t]) || "Unclustered"; }
 const SLIDE1_QS = QS.filter(q=>q.onSlide1);          // interviewer-observable, captured on slide 1
 const TOTAL_Q = QS.filter(q=>!q.onSlide1).length;    // questions actually asked in the flow
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
@@ -481,8 +564,10 @@ STEPS.push({kind:"notes"});
 STEPS.push({kind:"finish"});
 
 /* answer model */
-const BLANK_ANS = { answers:{}, other:{}, qnotes:{}, industry:"", businessName:"", city:"", ownerName:"", contactName:"", contactPhone:"", contactEmail:"", photo:"", notes:"" };
-let ANS = {...BLANK_ANS};
+const BLANK_ANS = { answers:{}, other:{}, qnotes:{}, industry:"", businessName:"", city:"", ownerName:"", contactName:"", contactPhone:"", contactEmail:"", contactTime:"", photo:"", price_shown:"", notes:"" };
+function randPrice(){ return Math.random()<0.5 ? 2500 : 5000; }   // A/B price test — 50/50, independent per survey (parallel tablets)
+function freshAns(){ const a={...BLANK_ANS, answers:{}, other:{}, qnotes:{}}; a.price_shown=randPrice(); return a; }
+let ANS = freshAns();
 let step = 0, dir = "next";
 
 /* =====================================================================
@@ -502,12 +587,13 @@ async function uploadPhoto(data){
     const path = id+".jpg";
     const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, dataURLtoBlob(data.photo), {contentType:"image/jpeg", upsert:false});
     if(error) throw error;
-    const { data:pub } = sb.storage.from(PHOTO_BUCKET).getPublicUrl(path);
-    data.photo_url = pub?.publicUrl || "";
-    data.photo = "";   // drop the heavy base64 now that the file itself is stored
-  }catch(e){ /* upload failed — keep base64 in the row as a fallback */ }
+    data.photo_path = path;   // private bucket — admin views it later via a short-lived signed URL
+    data.photo = "";          // drop the heavy base64 now that the file itself is stored
+  }catch(e){ /* upload failed (e.g. offline) — keep base64 in the row as a fallback */ }
   return data;
 }
+// admin-only: turn a stored photo path into a 1-hour signed URL (private bucket)
+async function signedPhoto(path){ if(!path||!sb) return ""; try{ const { data } = await sb.storage.from(PHOTO_BUCKET).createSignedUrl(path, 3600); return data?.signedUrl||""; }catch(e){ return ""; } }
 const DKEY="seller-survey-draft", QKEY="seller-survey-queue", WHOKEY="seller-survey-surveyor", DEVKEY="seller-survey-device";
 function configured(){ return !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY); }
 function online(){ return navigator.onLine && !!sb; }
@@ -541,7 +627,11 @@ const navEl = ()=>document.getElementById("nav");
 function qShown(q){ return !q.cond || q.cond(ANS.answers); }
 function flowTotal(){ return QS.filter(q=>!q.onSlide1 && qShown(q)).length; }
 function stepVisible(i){ const s=STEPS[i]; if(!s) return false; if(s.kind==="q") return qShown(s.q); if(s.kind==="intro") return s.sec.qs.some(q=>!q.onSlide1 && qShown(q)); return true; }
-function answeredCount(){ return QS.filter(q=>!q.onSlide1 && qShown(q) && ANS.answers[q.id] && ANS.answers[q.id].length).length; }
+// the grid is "answered" only when all 12 cells (6 rows × importance + handled) are filled
+function gridComplete(){ return GAP_ROWS.every(r=>gapImp(ANS.answers,r.id) && gapHand(ANS.answers,r.id)); }
+function qAnswered(q){ return q.grid ? gridComplete() : !!(ANS.answers[q.id] && ANS.answers[q.id].length); }
+function answeredCount(){ return QS.filter(q=>!q.onSlide1 && qShown(q) && qAnswered(q)).length; }
+function fmtPrice(p){ return (Number(p)===5000) ? "5,000" : "2,500"; }
 
 function setProgress(){
   // progress based on questions answered-position (count questions before current step)
@@ -696,7 +786,26 @@ function renderStart(){
   bindNav();
 }
 
+const CAP_CARD = [
+  {en:"Your Google and Maps listing kept accurate, plus your own local website", hi:"Aapki Google aur Maps listing hamesha sahi, saath mein apni local website"},
+  {en:"Every review answered, and more 5-star reviews asked for", hi:"Har review ka jawab, aur zyada 5-star reviews maangna"},
+  {en:"Fresh posts, photos and offers made for you every week", hi:"Har hafte aapke liye nayi post, photo aur offer"},
+  {en:"Google and Meta ads that bring enquiries, not just clicks", hi:"Google aur Meta ads jo sirf click nahi, enquiry laayein"},
+  {en:"AI that answers every call and WhatsApp message 24×7 and books appointments or visits", hi:"AI jo 24×7 har call aur WhatsApp ka jawab de aur appointment / visit book kare"},
+  {en:"One simple report: how many customers came, and from where", hi:"Ek simple report: kitne customer aaye, aur kahan se"}
+];
 function renderIntro(sec){
+  if(sec.capCard){
+    stageEl().innerHTML = `<div class="intro-card capcard">
+      <div class="cap-note">${tUI('Tablet owner ki taraf ghumaayein. Har line ek baar padhein.','Turn the tablet to the owner. Read each line once.')}</div>
+      <h2 style="margin:6px 0 16px">${tUI('Hum aapke liye yeh kar sakte hain','What we can do for you')}</h2>
+      <ol class="cap-list">${CAP_CARD.map(c=>`<li>${esc(tUI(c.hi,c.en))}</li>`).join("")}</ol>
+    </div>`;
+    navEl().innerHTML = `${step>0?'<button class="btn ghost" id="back">Back</button>':''}
+      <button class="btn go" id="next">${tUI('Aage','Continue')} →</button>`;
+    bindNav();
+    return;
+  }
   stageEl().innerHTML = `<div class="intro-card">
     <div class="intro-emoji">${sec.emoji}</div>
     <div class="intro-letter">SECTION ${sec.letter}</div>
@@ -709,6 +818,8 @@ function renderIntro(sec){
 }
 
 function renderQ(q, sec){
+  if(q.grid) return renderGrid(q, sec);
+  if(q.id==='fit_price' && !ANS.price_shown){ ANS.price_shown=randPrice(); saveDraft(); }   // resumed pre-v2 draft safety
   const cur = ANS.answers[q.id] || [];
   const isSel = o => cur.includes(o);
   const optBtn = o=>`<button class="opt ${q.multi?'':'radio'} ${isSel(o)?'sel':''}" data-o="${esc(o)}">
@@ -721,17 +832,24 @@ function renderQ(q, sec){
       <span class="box">${CHECK}</span><span>${tUI('Anya','Other')}</span></button>`);
   const otherShown = !q.noOther && isSel(OTHER);
   let qIndex=0; for(let i=0;i<=step;i++){ if(STEPS[i].kind==="q" && qShown(STEPS[i].q)) qIndex++; }
+  const title = esc(tQ(q).replace('{price}', fmtPrice(ANS.price_shown)));
+  // gap_tried: show the respondent's actual gap rows as read-aloud chips
+  const chips = q.gapChips ? gapRowsFor(ANS.answers).map(r=>`<span class="gapchip">${esc(tUI(r.hi,r.label))}</span>`).join("") : "";
+  const noteBox = q.noteField?`<textarea class="field" id="noteBox" placeholder="${esc(q.noteField)}" style="margin-top:12px;min-height:96px">${esc((ANS.qnotes&&ANS.qnotes[q.id])||'')}</textarea>`:'';
   stageEl().innerHTML = `
     <div class="qnum"><span class="seclabel">${sec.emoji} ${sec.letter}</span> ${tUI('Sawaal','Question')} ${qIndex} ${tUI('/','of')} ${flowTotal()}</div>
-    <div class="qtitle">${esc(tQ(q))}</div>
+    <div class="qtitle">${title}</div>
     ${q.hint?`<div class="qhint pill">${esc(tHint(q))}</div>`:``}
+    ${chips?`<div class="gapchips">${chips}</div>`:``}
+    ${q.noteAbove?noteBox:''}
     <div class="opts">${opts}</div>
     ${q.noOther?'':`<input type="text" class="field" id="otherText" placeholder="${tUI('Unka jawab likhein','Type their answer')}" ${otherShown?'':'style="display:none"'} value="${esc(ANS.other[q.id]||'')}">`}
     ${q.contact?`<div class="subfields" id="contact" ${isSel('Yes')?'':'style="display:none"'}>
         <label>Name &amp; shop name (optional)<input type="text" class="field" id="cName" value="${esc(ANS.contactName)}"></label>
         <label>Phone (optional, only with their OK)<input type="text" class="field" id="cPhone" inputmode="tel" value="${esc(ANS.contactPhone)}"></label>
+        <label>Best time to come back<input type="text" class="field" id="cTime" placeholder="e.g. Tomorrow 4pm" value="${esc(ANS.contactTime||'')}"></label>
       </div>`:''}
-    ${q.noteField?`<textarea class="field" id="noteBox" placeholder="${esc(q.noteField)}" style="margin-top:12px;min-height:96px">${esc((ANS.qnotes&&ANS.qnotes[q.id])||'')}</textarea>`:''}
+    ${q.noteAbove?'':noteBox}
   `;
   // bind options
   stageEl().querySelectorAll(".opt").forEach(b=>{
@@ -741,10 +859,51 @@ function renderQ(q, sec){
   if(ot) ot.addEventListener("input", e=>{ ANS.other[q.id]=e.target.value; saveDraft(); });
   const cn=document.getElementById("cName"); if(cn) cn.addEventListener("input",e=>{ANS.contactName=e.target.value;saveDraft();});
   const cp=document.getElementById("cPhone"); if(cp) cp.addEventListener("input",e=>{ANS.contactPhone=e.target.value;saveDraft();});
+  const ctm=document.getElementById("cTime"); if(ctm) ctm.addEventListener("input",e=>{ANS.contactTime=e.target.value;saveDraft();});
   const nb=document.getElementById("noteBox"); if(nb) nb.addEventListener("input",e=>{ if(!ANS.qnotes) ANS.qnotes={}; ANS.qnotes[q.id]=e.target.value; saveDraft(); });
 
   navEl().innerHTML = `<button class="btn ghost" id="back">Back</button>
     <button class="btn primary" id="next">${step===STEPS.length-3?'Finish →':'Next →'}</button>`;
+  bindNav();
+}
+
+// Section G need-gap grid — one screen, 6 rows × (importance + handled), stored as 12 answers.
+function renderGrid(q, sec){
+  let qIndex=0; for(let i=0;i<=step;i++){ if(STEPS[i].kind==="q" && qShown(STEPS[i].q)) qIndex++; }
+  const pill = (rowId, scale, val, label)=>{
+    const key = "gap_"+rowId+"_"+scale;
+    const on = (ANS.answers[key]||[])[0]===val;
+    return `<button class="gpill ${on?'on':''}" data-key="${key}" data-val="${esc(val)}">${esc(label)}</button>`;
+  };
+  const rowHtml = r=>`
+    <div class="gridrow">
+      <div class="gridlabel">${esc(tUI(r.hi,r.label))}</div>
+      <div class="gridscales">
+        <div class="gscale"><span class="gcap">${tUI('Zaroori?','Important?')}</span>
+          ${GAP_IMP.map(v=>pill(r.id,"imp",v,tUI(GAP_IMP_HI[v],v))).join("")}</div>
+        <div class="gscale"><span class="gcap">${tUI('Abhi kaisa?','Handled?')}</span>
+          ${GAP_HAND.map(v=>pill(r.id,"hand",v,tUI(GAP_HAND_HI[v],v))).join("")}</div>
+      </div>
+    </div>`;
+  stageEl().innerHTML = `
+    <div class="qnum"><span class="seclabel">${sec.emoji} ${sec.letter}</span> ${tUI('Sawaal','Question')} ${qIndex} ${tUI('/','of')} ${flowTotal()}</div>
+    <div class="qtitle">${esc(tQ(q))}</div>
+    ${q.hint?`<div class="qhint pill">${esc(tHint(q))}</div>`:``}
+    <div class="grid">${GAP_ROWS.map(rowHtml).join("")}</div>
+    <div class="gridstatus" id="gridStatus"></div>`;
+  stageEl().querySelectorAll(".gpill").forEach(b=> b.onclick=()=>{
+    ANS.answers[b.dataset.key]=[b.dataset.val];
+    stageEl().querySelectorAll(`.gpill[data-key="${b.dataset.key}"]`).forEach(x=>x.classList.toggle("on", x===b));
+    saveDraft(); setProgress(); updateGridStatus();
+  });
+  function updateGridStatus(){
+    const done=GAP_ROWS.filter(r=>gapImp(ANS.answers,r.id)&&gapHand(ANS.answers,r.id)).length;
+    const el=document.getElementById("gridStatus");
+    if(el) el.textContent = done===GAP_ROWS.length ? tUI('Sab bhar gaya ✓','All filled ✓') : `${done}/${GAP_ROWS.length} ${tUI('bhare','filled')}`;
+  }
+  updateGridStatus();
+  navEl().innerHTML = `<button class="btn ghost" id="back">Back</button>
+    <button class="btn primary" id="next">${tUI('Aage','Next')} →</button>`;
   bindNav();
 }
 
@@ -786,8 +945,8 @@ function chooseOpt(q, val, btn){
     // contact field
     if(q.contact){ const c=document.getElementById("contact"); if(c){ c.style.display = (val==='Yes' && !already)?'grid':'none'; } }
     saveDraft(); setProgress();
-    // auto-advance (but not for Other, not when picking the contact-triggering question, not on deselect)
-    if(!already && val!==OTHER && !q.contact){ setTimeout(()=>{ if(step<STEPS.length-1){ goNext(); } }, 320); }
+    // auto-advance (but not for Other, not when picking the contact-triggering question, not on deselect, not when the interviewer still needs to type)
+    if(!already && val!==OTHER && !q.contact && !q.noAuto){ setTimeout(()=>{ if(step<STEPS.length-1){ goNext(); } }, 320); }
   }
 }
 
@@ -839,7 +998,7 @@ function openJump(){
     html+=`<button class="jump-sec" data-step="${secIdx}">${sec.emoji} Section ${sec.letter} · ${esc(sec.title)}</button>`;
     vqs.forEach(q=>{
       const qIdx=STEPS.findIndex(s=>s.kind==='q'&&s.q===q);
-      const done=ANS.answers[q.id]&&ANS.answers[q.id].length;
+      const done=qAnswered(q);
       html+=`<button class="jump-q ${step===qIdx?'cur':''}" data-step="${qIdx}"><span class="j-ck">${done?'✓':''}</span><span>${esc(q.q)}</span></button>`;
     });
   });
@@ -857,7 +1016,10 @@ function closeJump(){
   setTimeout(()=>{ bd.hidden=true; }, 220);
 }
 document.getElementById("openJump").onclick=openJump;
-function goNext(){ let i=step+1; while(i<STEPS.length && !stepVisible(i)) i++; if(i<STEPS.length){ dir="next"; step=i; render(); } }
+function goNext(){
+  const cur=STEPS[step];
+  if(cur && cur.kind==="q" && cur.q.grid && !gridComplete()){ setStatus(tUI('Pehle har line bharein (dono taraf).','Please fill every row — both sides.'),"err"); const el=document.getElementById("gridStatus"); if(el) el.classList.add("warn"); return; }
+  let i=step+1; while(i<STEPS.length && !stepVisible(i)) i++; if(i<STEPS.length){ dir="next"; step=i; render(); } }
 function goBack(){ let i=step-1; while(i>0 && !stepVisible(i)) i--; if(i>=0){ dir="prev"; step=i; render(); } }
 
 function setStatus(msg,cls){ const s=document.getElementById("status"); if(s){ s.textContent=msg||""; s.className="status "+(cls||""); } }
@@ -877,9 +1039,9 @@ function confetti(){
 
 async function saveResponse(){
   QS.forEach(q=>{ if(q.cond && !qShown(q)){ delete ANS.answers[q.id]; delete ANS.other[q.id]; } });  // drop answers that became irrelevant
-  const data = { answers:ANS.answers, other:ANS.other, qnotes:ANS.qnotes||{}, industry:(ANS.industry||""),
+  const data = { survey_version:"v2", price_shown:(ANS.price_shown||""), answers:ANS.answers, other:ANS.other, qnotes:ANS.qnotes||{}, industry:(ANS.industry||""),
     business:(ANS.businessName||"").slice(0,160), city:(ANS.city||"").slice(0,80), owner:(ANS.ownerName||"").slice(0,120),
-    contactName:(ANS.contactName||"").slice(0,120), contactPhone:(ANS.contactPhone||"").slice(0,30), contactEmail:(ANS.contactEmail||"").slice(0,160), photo:(ANS.photo||""), photo_id:"", photo_url:"", notes:(ANS.notes||"").slice(0,2000) };
+    contactName:(ANS.contactName||"").slice(0,120), contactPhone:(ANS.contactPhone||"").slice(0,30), contactEmail:(ANS.contactEmail||"").slice(0,160), contactTime:(ANS.contactTime||"").slice(0,80), photo:(ANS.photo||""), photo_id:"", photo_path:"", notes:(ANS.notes||"").slice(0,2000) };
   if(!Object.keys(data.answers).length){ setStatus("Answer at least one question before saving.","err"); return; }
   if(!configured()){ setStatus("Not connected — add Supabase keys in CONFIG to save to the shared database.","err"); return; }
   const btn=document.getElementById("save"); btn.disabled=true; setStatus(data.photo?"Uploading photo…":"Saving…");
@@ -890,7 +1052,7 @@ async function saveResponse(){
   confetti();
   const synced = online() && getQueue().length===0;
   // reset for next seller
-  ANS = {...BLANK_ANS};
+  ANS = freshAns();
   step=0; try{localStorage.removeItem(DKEY)}catch(e){}
   dir="next"; render();
   setStatus(synced ? "✅ Saved to shared database. Ready for the next seller!" : "✅ Saved on this device — will sync when back online.","ok");
@@ -902,9 +1064,10 @@ async function saveResponse(){
    ===================================================================== */
 function rebuildResp(remoteRows){
   const map=r=>({ at:r.created_at||r.client_time, surveyor:r.surveyor, _synced:!!r.created_at,
+    version:(r.payload?.survey_version)||"v1", price_shown:r.payload?.price_shown||"",
     industry:r.payload?.industry||"", business:r.payload?.business||"", city:r.payload?.city||"", owner:r.payload?.owner||"",
     answers:r.payload?.answers||{}, other:r.payload?.other||{}, qnotes:r.payload?.qnotes||{},
-    contactName:r.payload?.contactName||"", contactPhone:r.payload?.contactPhone||"", contactEmail:r.payload?.contactEmail||"", photo:r.payload?.photo||"", photo_id:r.payload?.photo_id||"", photo_url:r.payload?.photo_url||"", notes:r.payload?.notes||"" });
+    contactName:r.payload?.contactName||"", contactPhone:r.payload?.contactPhone||"", contactEmail:r.payload?.contactEmail||"", contactTime:r.payload?.contactTime||"", photo:r.payload?.photo||"", photo_id:r.payload?.photo_id||"", photo_path:r.payload?.photo_path||"", photo_url:r.payload?.photo_url||"", notes:r.payload?.notes||"" });
   RESP=[...getQueue().map(map), ...(remoteRows||[]).map(map)];
   renderResults();
 }
@@ -915,62 +1078,105 @@ async function loadRemote(){
   catch(e){ rebuildResp([]); }
 }
 function pct(num,den){ return den? Math.round(100*num/den)+"%" : "–"; }
-function share(id,test){ const rows=RESP.filter(r=>r.answers?.[id]?.length); const hit=rows.filter(r=>r.answers[id].some(test)).length; return {v:pct(hit,rows.length), b:`${hit} of ${rows.length}`}; }
+let RES_CLUSTER="All", RES_VER="v2";
+function filteredResp(){ return RESP.filter(r=>(RES_VER==="all"||r.version===RES_VER) && (RES_CLUSTER==="All"||clusterOf(r)===RES_CLUSTER)); }
+function share(base,id,test){ const rows=base.filter(r=>r.answers?.[id]?.length); const hit=rows.filter(r=>r.answers[id].some(test)).length; return {v:pct(hit,rows.length), b:`${hit} of ${rows.length}`}; }
 function renderResults(){
   const c=document.getElementById("count"); if(c) c.textContent=RESP.length;
   const el=document.getElementById("results"); if(!el) return;
   if(!configured()){ el.innerHTML=`<div class="empty"><strong>Not connected to the shared database</strong><span>Add your Supabase URL + anon key in <code>CONFIG</code> to see everyone's responses here.</span></div>`; return; }
   if(!RESP.length){ el.innerHTML=`<div class="empty"><strong>No responses yet</strong><span>Responses from all tablets appear here as a live tally, with headline signals on whether an SMB product makes sense.</span></div>`; return; }
+
+  // ---- filters (cluster + version) ----
+  const base=filteredResp();
+  const clusterBtns=CLUSTER_LIST.map(cl=>`<button class="fbtn ${RES_CLUSTER===cl?'on':''}" data-cl="${esc(cl)}">${esc(cl==='All'?'All clusters':cl)}</button>`).join("");
+  const verBtns=[["v2","v2"],["v1","v1"],["all","All"]].map(([v,l])=>`<button class="fbtn ${RES_VER===v?'on':''}" data-ver="${v}">${l}</button>`).join("");
+  let html=`<div class="resfilter">
+    <div class="frow"><span class="flab">Cluster</span>${clusterBtns}</div>
+    <div class="frow"><span class="flab">Version</span>${verBtns}<span class="ncount">n = ${base.length}</span></div>
+  </div>`;
+
+  if(!base.length){ el.innerHTML=html+`<div class="empty"><strong>No responses in this filter</strong><span>Try “All clusters” or a different version.</span></div>`; bindResFilters(); return; }
+
+  // ---- top pain (most common pain_open) ----
+  const po=base.filter(r=>r.answers?.pain_open?.length);
+  const pc={}; po.forEach(r=>{ const v=r.answers.pain_open[0]; pc[v]=(pc[v]||0)+1; });
+  let topPain="–",topN=0; Object.entries(pc).forEach(([k,n])=>{ if(n>topN){topPain=k==OTHER?"Other":k;topN=n;} });
+
+  // ---- continue-at-price (split by what price was shown) ----
+  const contAt=price=>{ const rows=base.filter(r=>String(r.price_shown)===String(price) && r.answers?.fit_price?.length); const hit=rows.filter(r=>["Definitely","Probably"].includes(r.answers.fit_price[0])).length; return {v:pct(hit,rows.length), b:`${hit} of ${rows.length}`}; };
+
   const sigs=[
-    ["First-generation founders", share("generation", v=>v.startsWith("First generation"))],
-    ["Use an agency or freelancer", share("who", v=>v==="A local agency"||v==="A freelancer")],
-    ["Unhappy with current setup", share("sat", v=>v==="Very unhappy"||v==="Unhappy")],
-    ["New customers dropping off", share("customer_trend", v=>v==="Slowly dropping"||v==="Dropping fast")],
-    ["Can't be found on Google", share("found_online", v=>["I don't show up at all","Wrong or old information shows","I've never checked"].includes(v))],
-    ["Competitors outrank them in search", share("competitor_check", v=>["A competitor is above me","Only competitors — I'm not there"].includes(v))],
-    ["Enquiries slip away", share("enquiry_slip", v=>v==="Many just slip through"||v==="We lose them")],
-    ["Misses 6+ calls a day", share("missed_calls", v=>v==="6–15"||v==="More than 15")],
-    ["Doesn't know what customers search", share("search_terms", v=>v.startsWith("No"))],
-    ["Online presence looks weak", share("presence_problems", v=>v==="My page looks empty or outdated"||v==="No recent photos or posts")],
-    ["Worried about / ignores reviews", share("reviews_feeling", v=>v==="Worried about them"||v==="I never look"||v==="I don't get many")],
-    ["Rarely posts anything", share("post_frequency", v=>v==="Rarely or never"||v==="Once in a while")],
-    ["No one makes their content", share("creatives", v=>v==="We rarely make any"||v==="We don't post at all")],
-    ["Blocked on content (time/ideas/help)", share("creative_blocker", v=>v==="No time to make them"||v==="Don't know what to post"||v==="No one to design / edit"||v==="Run out of ideas")],
-    ["Owner does everything alone", share("who_does_digital", v=>v==="I do it all myself")],
-    ["Owner spends 1hr+/day on this", share("owner_time", v=>v==="1–2 hours"||v==="More than 2 hours")],
-    ["Can't tell what brings customers", share("attribution", v=>v.startsWith("No"))],
-    ["Thinks a WhatsApp assistant would fix it", share("solution_belief", v=>v.includes("WhatsApp assistant"))],
-    ["Thinks a voice bot would fix it", share("solution_belief", v=>v.includes("voice bot"))],
-    ["Thinks paid ads would fix it", share("solution_belief", v=>v.includes("Paid ads")||v.startsWith("Ads on"))],
-    ["Wants a human to deal with", share("comm_mode", v=>v==="A real human")],
-    ["Open to WhatsApp support", share("comm_mode", v=>v==="On WhatsApp")],
-    ["Willing to pay ₹5k+/month", share("willing_pay", v=>["₹5,000–7,000","₹7,000–10,000","Above ₹10,000"].includes(v))],
-    ["Would pay something (not ₹0)", share("willing_pay", v=>v&&v!=="Nothing")],
+    ["Not a marketing problem", share(base,"pain_open", v=>v.startsWith("Not a marketing problem"))],
+    ["Top pain", {v:pct(topN,po.length), b:topPain}],
+    ["Loses 6+ customers a week", share(base,"pain_loss", v=>v==="6–15"||v==="More than 15")],
+    ["Can't be found on Google", share(base,"found_online", v=>["I don't show up at all","Wrong or old information shows","I've never checked"].includes(v))],
+    ["Competitors outrank them", share(base,"competitor_check", v=>["A competitor is above me","Only competitors — I'm not there"].includes(v))],
+    ["Misses 6+ calls a day", share(base,"missed_calls", v=>v==="6–15"||v==="More than 15")],
+    ["Enquiries slip away", share(base,"enquiry_slip", v=>v==="Many just slip through"||v==="We lose them")],
+    ["Already paying for help", share(base,"gap_tried", v=>["Agency","Freelancer","Practo, Justdial or similar app"].includes(v))],
+    ["Trial accepted", share(base,"fit_trial", v=>v==="Yes")],
+    ["Would continue at ₹2,500", contAt(2500)],
+    ["Would continue at ₹5,000", contAt(5000)],
   ];
-  let html=`<div class="signals">${sigs.map(([l,s])=>`<div class="sig"><span class="v">${s.v}</span><span class="l">${l}</span><span class="b">${s.b}</span></div>`).join("")}</div>`;
+  html+=`<div class="signals">${sigs.map(([l,s])=>`<div class="sig"><span class="v">${s.v}</span><span class="l">${l}</span><span class="b">${esc(s.b)}</span></div>`).join("")}</div>`;
+
+  // ---- pain verbatims ----
+  const verb=base.map(r=>r.qnotes?.pain_open).filter(Boolean);
+  if(verb.length) html+=`<div class="verbatims"><h3>Pain, in their words (${verb.length})</h3><div class="vlist">${verb.map(v=>`<div class="vq">“${esc(v)}”</div>`).join("")}</div></div>`;
+
+  // ---- need-gap table ----
+  const gapTable=GAP_ROWS.map(r=>{
+    const impRows=base.filter(x=>x.answers?.["gap_"+r.id+"_imp"]?.length);
+    const handRows=base.filter(x=>x.answers?.["gap_"+r.id+"_hand"]?.length);
+    const nVery=impRows.filter(x=>x.answers["gap_"+r.id+"_imp"][0]==="Very").length;
+    const nBadOk=handRows.filter(x=>["Badly","Okay"].includes(x.answers["gap_"+r.id+"_hand"][0])).length;
+    const nGap=base.filter(x=>isGapRow(x.answers,r.id)).length;
+    const fitRows=base.filter(x=>x.answers?.fit_first?.length);
+    const nFit=fitRows.filter(x=>x.answers.fit_first[0]===FIT_MAP[r.id]).length;
+    return {label:r.label, very:pct(nVery,impRows.length), badok:pct(nBadOk,handRows.length),
+      gapPct:impRows.length?Math.round(100*nGap/impRows.length):0, gapDen:impRows.length, fit:pct(nFit,fitRows.length)};
+  }).sort((a,b)=>b.gapPct-a.gapPct);
+  html+=`<div class="needgap"><h3>Need-gap by job</h3>
+    <table><thead><tr><th>Job</th><th>Very imp.</th><th>Badly/Okay</th><th>Gap %</th><th>Wanted first</th></tr></thead>
+    <tbody>${gapTable.map((g,i)=>`<tr class="${i===0?'top':''}"><td>${esc(g.label)}</td><td>${g.very}</td><td>${g.badok}</td><td><b>${g.gapPct}%</b></td><td>${g.fit}</td></tr>`).join("")}</tbody></table>
+    <div class="sub">Gap % = Very important + handled Badly/Okay. Sorted by biggest gap.</div></div>`;
+
+  // ---- per-question bars (remaining questions + the 12 grid cells) ----
   let k=0;
-  QS.forEach(q=>{ k++;
-    const rows=RESP.filter(r=>r.answers?.[q.id]?.length);
+  [...QS.filter(q=>!q.grid), ...GRID_SUBQS].forEach(q=>{ k++;
+    const rows=base.filter(r=>r.answers?.[q.id]?.length);
     const counts=q.opts.map(o=>rows.filter(r=>r.answers[q.id].includes(o)).length);
     const oc=rows.filter(r=>r.answers[q.id].includes(OTHER)).length;
     const labels=[...q.opts]; if(!q.noOther){ labels.push("Other"); counts.push(oc); }
     const max=Math.max(1,...counts);
-    const others=RESP.map(r=>r.other?.[q.id]).filter(Boolean);
+    const others=base.map(r=>r.other?.[q.id]).filter(Boolean);
     html+=`<div class="rq"><h3>${String(k).padStart(2,"0")} · ${esc(q.q)}</h3><div class="sub">${rows.length} answered${q.multi?" · multiple picks allowed":""}</div>
       ${labels.map((l,i)=>`<div class="bar"><div class="track"><div class="fill" style="width:${100*counts[i]/max}%"></div><div class="lbl">${esc(l)}</div></div><div class="ct">${counts[i]} · ${pct(counts[i],rows.length)}</div></div>`).join("")}
       ${others.length?`<div class="others">${others.map(o=>`<span>“${esc(o)}”</span>`).join("")}</div>`:""}</div>`;
   });
   el.innerHTML=html;
+  bindResFilters();
+}
+function bindResFilters(){
+  document.querySelectorAll('#results .fbtn[data-cl]').forEach(b=> b.onclick=()=>{ RES_CLUSTER=b.dataset.cl; renderResults(); });
+  document.querySelectorAll('#results .fbtn[data-ver]').forEach(b=> b.onclick=()=>{ RES_VER=b.dataset.ver; renderResults(); });
 }
 document.getElementById("refresh").onclick=async()=>{ const es=document.getElementById("exportStatus"); es.textContent="Refreshing…"; await loadRemote(); es.textContent=""; };
-document.getElementById("export").onclick=()=>{
+document.getElementById("export").onclick=async()=>{
   const es=document.getElementById("exportStatus");
   if(!RESP.length){ es.textContent="No responses to download yet."; return; }
+  es.textContent="Preparing export…";
+  // admin-only: resolve a short-lived signed link for each private photo
+  const photoLinks = await Promise.all(RESP.map(r=> r.photo_path ? signedPhoto(r.photo_path) : Promise.resolve(r.photo_url||(r.photo?"(stored in response — not yet uploaded)":"")) ));
   const noteQs=QS.filter(q=>q.noteField);
-  const head=["Saved at","Surveyor","Industry","Business","City","Owner","Phone","Email","Photo ID","Photo link",...QS.map(q=>q.q),...noteQs.map(q=>q.q+" — note"),"Notes"];
+  const colQs=QS.filter(q=>!q.grid);   // the grid itself has no single answer — its 12 cells are added separately
+  const head=["Saved at","Surveyor","Version","Industry","Cluster","Business","City","Owner","Phone","Email","Best time","Price shown","Photo ID","Photo link (1-hr)",
+    ...colQs.map(q=>q.q),...GRID_SUBQS.map(s=>s.q),...noteQs.map(q=>q.q+" — note"),"Notes"];
   const cell=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const lines=[head.map(cell).join(",")].concat(RESP.map(r=>[r.at,r.surveyor,r.industry,r.business,r.city,r.owner,r.contactPhone,r.contactEmail,r.photo_id,(r.photo_url||(r.photo?"(stored in response — not yet uploaded)":"")),
-    ...QS.map(q=>(r.answers?.[q.id]||[]).map(v=>v===OTHER?`Other: ${r.other?.[q.id]||""}`:v).join("; ")),
+  const lines=[head.map(cell).join(",")].concat(RESP.map((r,ri)=>[r.at,r.surveyor,r.version,r.industry,clusterOf(r),r.business,r.city,r.owner,r.contactPhone,r.contactEmail,r.contactTime,(r.price_shown?("₹"+fmtPrice(r.price_shown)):""),r.photo_id,photoLinks[ri],
+    ...colQs.map(q=>(r.answers?.[q.id]||[]).map(v=>v===OTHER?`Other: ${r.other?.[q.id]||""}`:v).join("; ")),
+    ...GRID_SUBQS.map(s=>(r.answers?.[s.id]||[]).join("; ")),
     ...noteQs.map(q=>r.qnotes?.[q.id]||""),
     r.notes].map(cell).join(",")));
   const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
@@ -982,9 +1188,7 @@ document.getElementById("export").onclick=()=>{
 document.getElementById("clearAll").onclick=async()=>{
   const es=document.getElementById("exportStatus");
   if(!sb){ es.textContent="Not connected to the database — can't clear."; return; }
-  const pin=prompt("Enter PIN to permanently clear ALL responses:");
-  if(pin===null) return;                                   // cancelled
-  if(pin!==CONFIG.CLEAR_PIN){ es.textContent="Wrong PIN — nothing was deleted."; return; }
+  if(!(await currentSession())){ es.textContent="Admin sign-in required to clear."; return; }   // RLS also blocks non-admins
   const total=RESP.length;
   if(!confirm(`This permanently deletes ALL ${total} responses for everyone, and cannot be undone.\n\nTip: Download CSV first if you want a backup.\n\nContinue?`)) return;
   es.textContent="Clearing…";
@@ -996,11 +1200,11 @@ document.getElementById("clearAll").onclick=async()=>{
     localStorage.removeItem(DKEY);                         // drop any half-finished survey on this device
     await loadRemote();                                    // refresh from the (now empty) server
     if(removed===0 && total>0){
-      es.textContent="⚠ Server responses were NOT deleted — you still need to add the \"anon delete\" policy in Supabase, then try again.";
+      es.textContent="⚠ Nothing was deleted — check the authenticated DELETE policy on the responses table in Supabase.";
     } else {
       es.textContent=`✓ Cleared ${removed} response${removed===1?'':'s'}. Everything is wiped.`;
     }
-  }catch(e){ es.textContent="Couldn't clear: "+(e.message||e)+" — did you add the delete policy in Supabase?"; }
+  }catch(e){ es.textContent="Couldn't clear: "+(e.message||e); }
 };
 
 /* =====================================================================
@@ -1011,7 +1215,49 @@ function show(which){
   tabs.fill.setAttribute("aria-selected", which==="fill"); tabs.results.setAttribute("aria-selected", which==="results");
   document.getElementById("view-fill").hidden = which!=="fill";
   document.getElementById("view-results").hidden = which!=="results";
-  if(which==="results") loadRemote();
+  if(which==="results") openResults();
+}
+
+/* ---- admin-only results: requires a Supabase login; RLS enforces that only the admin can read/delete ---- */
+let ADMIN_SESSION=null;
+async function currentSession(){ if(!sb) return null; try{ const {data}=await sb.auth.getSession(); return data?.session||null; }catch(e){ return null; } }
+async function openResults(){
+  const el=document.getElementById("results");
+  const toolbar=document.querySelector("#view-results .toolbar");
+  if(!configured()){ toolbar.style.display="none"; renderResults(); return; }
+  ADMIN_SESSION = await currentSession();
+  if(!ADMIN_SESSION){ toolbar.style.display="none"; renderLogin(el); return; }
+  toolbar.style.display="";
+  if(!document.getElementById("signOut")){
+    const b=document.createElement("button"); b.className="btn ghost sm"; b.id="signOut"; b.type="button"; b.textContent="Sign out";
+    b.onclick=async()=>{ await sb.auth.signOut(); ADMIN_SESSION=null; openResults(); };
+    toolbar.appendChild(b);
+  }
+  await loadRemote();
+}
+function renderLogin(el){
+  el.innerHTML = `<div class="loginbox">
+    <h3>Admin sign-in</h3>
+    <p class="sub">Only an administrator can view, download or clear responses.</p>
+    <input type="email" class="field" id="admEmail" placeholder="Admin email" autocomplete="username" autocapitalize="none">
+    <input type="password" class="field" id="admPass" placeholder="Password" autocomplete="current-password">
+    <button class="btn primary" id="admGo" style="width:100%;margin-top:10px">Sign in →</button>
+    <div class="status" id="admStatus" style="text-align:center"></div>
+  </div>`;
+  const st=document.getElementById("admStatus");
+  const go=async()=>{
+    const email=(document.getElementById("admEmail").value||"").trim();
+    const password=document.getElementById("admPass").value||"";
+    if(!email||!password){ st.textContent="Enter email and password."; return; }
+    st.textContent="Signing in…";
+    try{
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ st.textContent="Sign-in failed: "+error.message; return; }
+      openResults();
+    }catch(e){ st.textContent="Sign-in failed: "+(e.message||e); }
+  };
+  document.getElementById("admGo").onclick=go;
+  document.getElementById("admPass").addEventListener("keydown",e=>{ if(e.key==="Enter") go(); });
 }
 tabs.fill.onclick=()=>show("fill"); tabs.results.onclick=()=>show("results");
 
@@ -1052,11 +1298,6 @@ function renderGate(){
   document.getElementById("view-results").hidden=true;
 }
 document.getElementById("switchWho").onclick=renderGate;
-document.getElementById("toResultsFromGate").onclick=()=>{ /* allow peeking results from gate */
-  SURVEYOR=SURVEYOR||"(not signed in)"; document.getElementById("gate").hidden=true;
-  document.getElementById("chrome").hidden=false; document.getElementById("tabs").hidden=false;
-  document.getElementById("whoName").textContent=SURVEYOR; show("results");
-};
 
 (function boot(){
   if(configured() && window.supabase){ sb=window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY); }
