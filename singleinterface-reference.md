@@ -1,23 +1,17 @@
-# SingleInterface reference data (used in the opening showcase)
+# SingleInterface reference data (archived — no longer used by the app)
 
-This is the data that powers the **credibility showcase** screen the interviewer shows the
-shop owner. It all lives inside `index.html` — this file is a readable copy so you can review
-and tell me what to change (or edit `index.html` directly).
+The app used to open with a **credibility showcase** screen: a SingleInterface hero band with
+platform stats and trust badges, an industry picker, and a wall of client brands for that
+industry. **That screen was removed from `index.html` in November 2026.** The survey now goes
+straight from the interviewee card into Section A, and the `SI_PITCH` / `CLIENTS` objects no
+longer exist in the code.
 
-## Where it is in `index.html`
-- **Platform stats + trust badges** → the `SI_PITCH` object (search for `const SI_PITCH`).
-- **Client brands per industry** → the `CLIENTS` object (search for `const CLIENTS`).
-- **Brand logos** → loaded live from Google's favicon service
-  (`https://www.google.com/s2/favicons?domain=<domain>`), with the brand name always shown.
-  To change a brand's logo/icon, change its `d:` (domain) value.
-
-> Clearbit's logo API (the "obvious" logo source) was shut down after HubSpot acquired it,
-> so we use Google favicons, which are reliable. If you later get a folder of official logo
-> image files, tell me and I'll switch the wall to use those instead.
+This file is kept as a readable copy of that data so it can be reused later — for a leave-behind
+card, a pitch deck, or if the showcase is ever brought back. Nothing here affects the survey.
 
 ---
 
-## Platform stats (the navy hero band)
+## Platform stats (what the hero band showed)
 | Stat | Label |
 |---|---|
 | 400K+ | Locations powered |
@@ -33,9 +27,8 @@ and tell me what to change (or edit `index.html` directly).
 
 ---
 
-## Client brands shown per industry
-These are the hero names shown when the interviewer taps an industry. (Your full export has
-far more; this is a curated, recognisable set per industry — tell me to add/remove any.)
+## Client brands by industry
+A curated, recognisable set per industry (the full client list is much longer).
 
 - **Automobiles:** Tata Motors, Mahindra, Bajaj Auto, TVS Motor, Honda Cars, Kia, Audi, Skoda, Ather, Yamaha, Apollo Tyres, CEAT, MRF, JK Tyre, Exide, Michelin
 - **BFSI:** SBI Life, HDFC Life, Bajaj Finserv, Bajaj Allianz, Angel One, Motilal Oswal, Tata Capital, Aditya Birla Capital, Axis Mutual Fund, ICICI Prudential, PNB MetLife, HDFC ERGO, Shriram Finance, AU Small Finance Bank, HSBC, Policybazaar
@@ -50,7 +43,8 @@ far more; this is a curated, recognisable set per industry — tell me to add/re
 
 ---
 
-## To change anything
-Tell me (e.g. "add Ola Electric to Automobiles", "remove HSBC", "change the 300+ team stat to
-500+") and I'll update `index.html`. Or edit the `CLIENTS` / `SI_PITCH` objects directly — each
-brand is `{n:"Display Name", d:"domain.com"}`.
+## If the showcase is ever brought back
+Brand logos were loaded live from Google's favicon service
+(`https://www.google.com/s2/favicons?domain=<domain>&sz=64`), with the brand name always shown
+as a fallback. Clearbit's logo API was shut down after HubSpot acquired it, so avoid that
+source. Each brand was stored as `{n:"Display Name", d:"domain.com"}`.
