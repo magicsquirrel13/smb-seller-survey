@@ -375,7 +375,7 @@ const CLUSTER_LIST = ["All",...CLUSTER_SHORT,"Unclustered"];
 // Cluster is derived from the business type; for "Other" the interviewer picks the closest group (cluster_other).
 function clusterFromAnswers(a){ a=a||{}; const t=(a.type||[])[0]; if(t===OTHER) return (a.cluster_other||[])[0]||"Unclustered"; return (t&&CLUSTER[t])||"Unclustered"; }
 // Short version: walk-in single-outlet shops (the low-priority segment) get the essentials only.
-function isShort(a){ a=a||ANS.answers; return clusterFromAnswers(a)==="D. Walk-in" && (a.locations||[])[0]==="1"; }
+function isShort(a){ a=a||ANS.answers; const vt=(a.visit_type||[])[0]; return (vt?vt.startsWith("Walk-in"):clusterFromAnswers(a)==="D. Walk-in") && (a.locations||[])[0]==="1"; }
 
 /* conditional-display helpers — a question with cond() only shows when it returns true.
    `a` is the answers map (id -> array of chosen values). */
@@ -401,6 +401,7 @@ const SECTIONS = [
  // ---- SCREEN FIRST: qualify, so surveyor time goes to the target segment ----
  { letter:"A", title:"Quick check", emoji:"⚡", ht:"Jaldi se", hb:"Do-teen cheezein, taaki hum sahi business par focus karein.", blurb:"A couple of quick things to see who we focus on.", qs:[
   {id:"type", q:"What kind of business is it?", opts:["Clinic / doctor","Dentist / physio / practitioner","Diagnostic lab","Pharmacy","Optical / eye care","Salon / spa","Gym / fitness","Real estate / interiors","Play school / coaching","Retail – high value (electronics, furniture, jewellery)","Retail – everyday (grocery, apparel, general)","Restaurant / café","Home services / repairs"], onSlide1:true, s1label:"Business type"},
+  {id:"visit_type", q:"Is this business mainly appointment-led or walk-in?", opts:["Appointment-led (people book or call ahead)","Walk-in (people just come in)","Both"], noOther:true},
   {id:"locations", q:"How many outlets or branches do you have?", opts:["1","2–3","4–10","More than 10"], noOther:true},
   {id:"enquiry_volume", q:"On an average day, how many customer enquiries — calls and messages together?", opts:["Under 5","5–15","15–30","30–50","More than 50"], noOther:true},
  ]},
@@ -494,6 +495,7 @@ const HI = {
   edu:{q:"Sabse zyada padhai (education)"},
   lang:{q:"Business ke liye phone par kaunsi bhasha pasand hai?", s1:"Baat-cheet ki bhasha", o:{"Regional language":"Regional bhasha"}},
   type:{q:"Yeh kis tarah ka business hai?", s1:"Business type", o:{"Pharmacy":"Pharmacy / chemist","Optical / eye care":"Optical / aankhon ki dukaan","Retail – high value (electronics, furniture, jewellery)":"Retail – mehenga saamaan (electronics, furniture, jewellery)","Retail – everyday (grocery, apparel, general)":"Retail – roz ka saamaan (grocery, kapde, general)","Home services / repairs":"Home services / repair"}},
+  visit_type:{q:"Yeh business zyadatar appointment-led hai ya walk-in?", o:{"Appointment-led (people book or call ahead)":"Appointment-led (log book/call karke aate hain)","Walk-in (people just come in)":"Walk-in (log seedhe aate hain)","Both":"Dono"}},
   locations:{q:"Aapke kitne outlet ya branch hain?"},
   years:{q:"Business kitna purana hai?", o:{"Less than 2 years":"2 saal se kam","2–5 years":"2–5 saal","5–10 years":"5–10 saal","More than 10 years":"10 saal se zyada"}},
   team:{q:"Aapke saath kitne log kaam karte hain?", o:{"Just me":"Sirf main","More than 20":"20 se zyada"}},
