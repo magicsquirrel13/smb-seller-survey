@@ -375,7 +375,11 @@ const CLUSTER_LIST = ["All",...CLUSTER_SHORT,"Unclustered"];
 // Cluster is derived from the business type; for "Other" the interviewer picks the closest group (cluster_other).
 function clusterFromAnswers(a){ a=a||{}; const t=(a.type||[])[0]; if(t===OTHER) return (a.cluster_other||[])[0]||"Unclustered"; return (t&&CLUSTER[t])||"Unclustered"; }
 // Short version: walk-in single-outlet shops (the low-priority segment) get the essentials only.
-function isShort(a){ a=a||ANS.answers; const vt=(a.visit_type||[])[0]; return (vt?vt.startsWith("Walk-in"):clusterFromAnswers(a)==="D. Walk-in") && (a.locations||[])[0]==="1"; }
+// Short-version branching is OFF: appointment-led and walk-in get the SAME questions.
+// (Flip SHORT_VERSION_ENABLED to true to send walk-in single-outlet shops to the essentials-only path.)
+const SHORT_VERSION_ENABLED = true;
+// All walk-ins get the shorter essentials-only follow-up; appointment-led and "Both" get the full survey.
+function isShort(a){ if(!SHORT_VERSION_ENABLED) return false; a=a||ANS.answers; return (a.visit_type||[])[0]==="Walk-in (people just come in)"; }
 
 /* conditional-display helpers — a question with cond() only shows when it returns true.
    `a` is the answers map (id -> array of chosen values). */
