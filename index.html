@@ -654,6 +654,7 @@ function stepMissing(i){
     if(q.ladder) return ladderComplete() ? null : {ids:["gridStatus"], msg:tUI('Pehle har amount par Haan/Nahi chunein.','Please answer Yes/No for every amount.')};
     if(!qAnswered(q)) return {ids:[], msg:tUI('Yeh sawaal zaroori hai — aage badhne se pehle ek jawab chunein.','This question is required — pick an answer before continuing.')};
     if(otherMissing(q)) return {ids:["otherText"], msg:tUI('"Other" chuna hai — unka jawab type karein.','You picked "Other" — type their answer first.')};
+    if(q.noteField && !(((ANS.qnotes||{})[q.id])||"").trim()) return {ids:["noteBox"], msg:tUI('Pehle unke shabd box mein likhein.','Write their exact words in the box first.')};
     return null;
   }
   return null;   // intro, notes, finish have nothing required
